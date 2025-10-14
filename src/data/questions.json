@@ -1,0 +1,5 @@
+[
+  { "id": 1, "question": "2 + 2 = ?", "correct": "4" },
+  { "id": 2, "question": "3 * 3 = ?", "correct": "9" },
+  { "id": 3, "question": "5 - 2 = ?", "correct": "3" }
+]
