@@ -9,3 +9,7 @@ export const calculateResult = (userAnswers, correctAnswers) => {
 
   return { correct };
 };
+
+export const uppercasetoLowercase = (str) => {
+  return str.toLocaleLowerCase();
+};

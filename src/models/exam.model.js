@@ -12,6 +12,11 @@ const examSchema = new mongoose.Schema(
     name: { type: String },
     currect_answer: { type: [String], default: [] },
     tests: { type: [currentAnswerSchema], default: [] },
+    test_type: {
+      type: String,
+      enum: ["rash", "standard"],
+      default: "standard",
+    },
   },
   { timestamps: true }
 );
