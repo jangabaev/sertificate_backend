@@ -1,18 +1,14 @@
 import { Router } from "express";
 import {
-  addTestToExam,
-  getExam,
-  getExamActiveStatus,
-  oneExamDetails,
   postExam,
+  getExams,
+  studentResponce
 } from "../controllers/exam.controller.js";
 
 const router = Router();
 
-router.get("/", getExam);
-router.get("/:examId", oneExamDetails);
-router.get("/active/test", getExamActiveStatus);
 router.post("/", postExam);
-router.patch("/:examId/test", addTestToExam);
+router.get("/", getExams)
+router.patch("/:id", studentResponce)
 
-export default router;
+export default router

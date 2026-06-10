@@ -31,8 +31,10 @@
 //   console.log(`✅ Server is running on port ${PORT}`)
 // );
 
-const express = require("express");
-const cors = require("cors");
+import express from "express";
+import cors from "cors";
+import userRoutes from "./src/routes/auth.routes.js"
+import examRoutes from "./src/routes/exam.routes.js"
 
 const app = express();
 
@@ -44,9 +46,10 @@ app.use(cors({
 
 app.use(express.json());
 
-const userRoutes = require("./src/routes/auth.routes");
+
 
 app.use("/users", userRoutes);
+app.use("/test", examRoutes);
 
 app.listen(3000, () => {
   console.log("Server running on port 3000");
