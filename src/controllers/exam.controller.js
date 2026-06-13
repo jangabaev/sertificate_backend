@@ -1,122 +1,3 @@
-// import { Exam } from "../models/exam.model.js";
-
-// export const postExam = async (req, res) => {
-//   try {
-//     const { name, currect_answer, test_type } = req.body;
-
-//     if (!name || !currect_answer) {
-//       return res
-//         .status(400)
-//         .json({ message: "Name and correct answers are required" });
-//     }
-//     const newExam = new Exam({
-//       name,
-//       currect_answer,
-//       status: "active",
-//       test_type,
-//     });
-//     await newExam.save();
-//     res.status(201).json(newExam);
-//   } catch (error) {
-//     res.status(500).json({ message: "Server error", error });
-//   }
-// };
-
-// export const getExam = async (req, res) => {
-//   try {
-//     const exams = await Exam.find();
-//     res.status(200).json(
-//       exams.map((exam) => ({
-//         id: exam._id,
-//         name: exam.name,
-//         status: exam.status ?? "notknown",
-//         test_type: exam.test_type ?? "standard",
-//       }))
-//     );
-//   } catch (error) {
-//     res.status(500).json({ message: "Server error", error });
-//   }
-// };
-
-// export const addTestToExam = async (req, res) => {
-//   try {
-//     const { examId } = req.params;
-//     const { user_id, test, name } = req.body;
-//     // Exam topamiz
-//     const exam = await Exam.findById(examId);
-//     if (!exam || !user_id || !test || !name) {
-//       return res.status(404).json({ message: "111Exam not found" });
-//     }
-//     if (test.length !== exam.currect_answer.length) {
-//       return res
-//         .status(400)
-//         .json({ message: "Test answers length mismatch for rash test type" });
-//     }
-//     if (user_id && exam.tests.find((t) => t.user_id === user_id)) {
-//       return res
-//         .status(400)
-//         .json({ message: "User has already submitted a test for this exam" });
-//     }
-//     exam.tests.push({ user_id, test, name });
-//     await exam.save();
-//     res.status(200).json({
-//       message: "New test added successfully",
-//       exam,
-//     });
-//   } catch (error) {
-//     res.status(500).json({ message: "Server error", error });
-//   }
-// };
-
-// export const oneExamDetails = async (req, res) => {
-//   try {
-//     const { examId } = req.params;
-//     const exam = await Exam.findById(examId);
-//     if (!exam) {
-//       return res.status(404).json({ message: "Exam not found" });
-//     }
-//     res.status(200).json({ name: exam.name, id: exam._id, ...exam });
-//   } catch (error) {
-//     return res.status(500).json({ message: "Server error", error });
-//   }
-// };
-
-// export const chageExamStatus = async (req, res) => {
-//   try {
-//     const { examId } = req.params;
-//     const { status } = req.body;
-//     const exam = await Exam.findById(examId);
-//     if (!exam) {
-//       return res.status(404).json({ message: "Exam not found" });
-//     }
-//     exam.status = status;
-//     await exam.save();
-//     res.status(200).json({ message: "Exam status updated", exam });
-//   } catch (error) {
-//     res.status(500).json({ message: "Server error", error });
-//   }
-// };
-
-// export const getExamActiveStatus = async (req, res) => {
-//   try {
-//     const exams = await Exam.find();
-//     res.status(200).json(
-//       exams.filter((exam) => {
-//         if (exam.status === "active") {
-//           return {
-//             id: exam._id,
-//             name: exam.name,
-//             status: exam.status ?? "notknown",
-//           };
-//         }
-//       })
-//     );
-//   } catch (error) {
-//     res.status(500).json({ message: "Server error", error });
-//   }
-// };
-
-
 import { Prisma } from "@prisma/client";
 
 import prisma from "../lib/prisma.js";
@@ -124,7 +5,6 @@ import prisma from "../lib/prisma.js";
 export const getExams = async (req, res) => {
   try {
     const exams = await prisma.test.findMany()
-    console.log(exams)
     res.json(exams)
   } catch (error) {
     res.status(500).json({
@@ -146,8 +26,6 @@ export const postExam = async (req, res) => {
     })
     res.status(201).json(exam)
   } catch (error) {
-    console.log(error)
-
     res.status(500).json({
       message: "Error creating user"
     })
@@ -157,17 +35,55 @@ export const postExam = async (req, res) => {
 export const studentResponce = async (req, res) => {
   try {
     const { id } = req.params
-    const exam=await prisma.test.findFirst({
-      where:{
-        id:1
-      }
+    const { user_id, responce } = req.body
+    const exam = await prisma.test.findFirst({
+      where: { id: Number(id) }
+    });
+
+    if (!exam) {
+      return res.status(404).json({ message: "Exam not found" });
+    }
+    const user = await prisma.user.findFirst({
+      where: { user_id }
     })
-    console.log(exam)
-    res.json([])
+
+    const currentStudents = Array.isArray(exam.students) ? exam.students : [];
+    const newStudent = {
+      id: user.user_id,
+      name: user.first_name ?? "" + user.last_name ?? "",
+      nickname: user.username,
+      responce,
+
+    };
+    currentStudents.push(newStudent);
+
+    const updatedExam = await prisma.test.update({
+      where: { id: Number(id) },
+      data: {
+        students: currentStudents
+      }
+    });
+    res.json(updatedExam)
   } catch (error) {
     console.log(error)
     res.status(500).json({
-         message: "Error getting users"
-      })
+      message: "Error getting users"
+    })
+  }
+}
+
+export const getExam = async (req, res) => {
+  try {
+    const { id } = req.params
+    const data = await prisma.test.findFirst({
+      where: {
+        id: Number(id)
+      }
+    })
+    res.json(data)
+  } catch (error) {
+    res.status(501).json({
+      message: "Error getting exams"
+    })
   }
 }
