@@ -29,4 +29,5 @@ model Test {
   status      Status   @unique
   responce    String[]
   students    Json     @default("[]") 
+  rash        Json     @default("{name:"test-1"}")
 }
