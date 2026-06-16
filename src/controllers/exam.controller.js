@@ -24,8 +24,10 @@ export const postExam = async (req, res) => {
         responce
       }
     })
+
     res.status(201).json(exam)
   } catch (error) {
+    console.log(error)
     res.status(500).json({
       message: "Error creating user"
     })

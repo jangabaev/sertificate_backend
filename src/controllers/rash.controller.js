@@ -1,6 +1,7 @@
 import prisma from "../lib/prisma.js";
 import TelegramBot from "node-telegram-bot-api";
 import { generatePDF } from "../utils/generatepdf.js";
+import { isCorrect } from "../utils/checkmath.js";
 
 const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, {
   polling: false,
@@ -28,11 +29,12 @@ function calcGradeStats(students) {
 export const getRashmodule = async (req, res) => {
   try {
     const { examId } = req.params;
-
     const respon = await prisma.test.findFirst({ where: { id: Number(examId) } });
     if (!respon) {
       return res.status(404).json([]);
     }
+
+    
 
     const responce = Array.isArray(respon.students) ? respon.students : [];
     const students_count = responce.length;
@@ -40,12 +42,14 @@ export const getRashmodule = async (req, res) => {
 
     let new_students = [];
     let currect_answers = new Array(trueAnswer.length).fill(0);
-
+console.log(isCorrect("A","A"))
+// console.log(responce)
+// console.log(trueAnswer)
     responce.forEach((el) => {
       const testTrueFalse = [];
       el.responce.forEach((ans, index) => {
         const isCorrect =
-          ans?.toLocaleLowerCase() === trueAnswer[index]?.toLocaleLowerCase() ? 1 : 0;
+         (index>35?isCorrect(ans, trueAnswer[index]):ans?.toLocaleLowerCase()== trueAnswer[index]?.toLocaleLowerCase()) ? 1 : 0;
         currect_answers[index] += isCorrect;
         testTrueFalse.push(isCorrect);
       });
@@ -55,7 +59,7 @@ export const getRashmodule = async (req, res) => {
         test: testTrueFalse,
       });
     });
-
+console.log("2")
     const possiblity = currect_answers.map((el) => {
       const p = el / students_count;
       if (p === 0 || p === 1) return 4 * (1 - p);
@@ -69,6 +73,7 @@ export const getRashmodule = async (req, res) => {
       summa_ball += b;
       return b;
     });
+     
 
     let skills_array = [];
     new_students = new_students.map((el) => {
@@ -94,6 +99,8 @@ export const getRashmodule = async (req, res) => {
       const total_ball = 50 + z_coficent * 20;
       return { ...el, total_ball, skil_calculateMean, skil_root };
     });
+
+   
 
     const grade_stats = calcGradeStats(new_students);
 
