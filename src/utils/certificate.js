@@ -43,6 +43,37 @@ function centered(doc, text, y, opts = {}) {
   doc.text(text, 0, y, { width: doc.page.width, align: "center", ...opts });
 }
 
+function simpleHash(text) {
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) {
+    hash = (hash * 31 + text.charCodeAt(i)) % 1000000;
+  }
+  return String(hash).padStart(6, "0");
+}
+
+function createResultId(student, examName) {
+  if (student.resultID) return student.resultID;
+  if (student.resultId) return student.resultId;
+
+  const userPart = student.user_id || student.id || "USER";
+  const hashPart = simpleHash(`${examName}-${student.name}-${userPart}`);
+  return `RID-${userPart}-${hashPart}`;
+}
+
+function drawResultBadge(doc, x, y, width, resultId) {
+  const height = 42;
+
+  doc.roundedRect(x, y, width, height, 7).fill("#FFFFFF");
+  doc.roundedRect(x, y, width, height, 7).lineWidth(0.8).strokeColor(GOLD).stroke();
+  doc.rect(x, y, 5, height).fill(GOLD);
+
+  doc.fillColor(DGOLD).font("Helvetica-Bold").fontSize(7.5);
+  doc.text("RESULT ID", x + 16, y + 9, { width: width - 28 });
+
+  doc.fillColor(NAVY).font("Helvetica-Bold").fontSize(12);
+  doc.text(resultId, x + 16, y + 22, { width: width - 28 });
+}
+
 export function generateCertificate({ student, examName, totalQuestions, outputPath }) {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ size: "A4", layout: "landscape", margin: 0 });
@@ -59,6 +90,7 @@ export function generateCertificate({ student, examName, totalQuestions, outputP
     const pct    = total > 0 ? Math.round((correctCount / total) * 100) : 0;
     const score  = student.total_ball ?? 0;
     const degree = getDegree(score);
+    const resultId = createResultId(student, examName);
 
     // ── FON ──────────────────────────────────────────────────────────────
     doc.rect(0, 0, W, H).fill(CREAM);
@@ -163,8 +195,7 @@ export function generateCertificate({ student, examName, totalQuestions, outputP
     doc.text(`Sana:  ${formatDate()}`, 70, y);
 
     // O'rta — "Mazkur sertifikat ID" (qo'shimcha ma'lumot)
-    doc.fillColor("#888").font("Helvetica").fontSize(8.5);
-    centered(doc, `Sertifikat ID: ${Date.now()}`, y + 3);
+    drawResultBadge(doc, (W - 230) / 2, y - 10, 230, resultId);
 
     // O'ng — imzo chizig'i
     const sigLineY = y + 28;

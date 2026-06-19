@@ -2,7 +2,6 @@ import { evaluate } from "mathjs";
 
 export function isCorrect(userAnswer, correctAnswer) {
   try {
-    console.log(userAnswer)
     const userValue = evaluate(userAnswer);
     const correctValue = evaluate(correctAnswer);
 

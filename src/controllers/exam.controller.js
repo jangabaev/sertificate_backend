@@ -4,12 +4,18 @@ import prisma from "../lib/prisma.js";
 
 export const getExams = async (req, res) => {
   try {
-    const exams = await prisma.test.findMany()
-    res.json(exams)
+    const { sort_by } = req.query;
+
+    const statusMap = { active: "ACTIVE", noactive: "INACTIVE" };
+    const where = statusMap[sort_by] ? { status: statusMap[sort_by] } : {};
+
+    const exams = await prisma.test.findMany({
+      where,
+      orderBy: { id: "asc" },
+    });
+    res.json(exams);
   } catch (error) {
-    res.status(500).json({
-      message: "Error creating user"
-    })
+    res.status(500).json({ message: "Error getting exams" });
   }
 }
 
