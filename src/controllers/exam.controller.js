@@ -21,13 +21,20 @@ export const getExams = async (req, res) => {
 
 export const postExam = async (req, res) => {
   try {
-    const { name, status, responce } = req.body
+    const { name, status, responce, user_id } = req.body
+
+    const creatorId = user_id ?? req.headers.user_id ?? req.headers["user-id"];
+
+    if (!creatorId) {
+      return res.status(400).json({ message: "Test yaratish uchun user_id kerak" });
+    }
 
     const exam = await prisma.test.create({
       data: {
         name,
         status,
-        responce
+        responce,
+        createdByUserId: String(creatorId),
       }
     })
 
@@ -51,17 +58,31 @@ export const studentResponce = async (req, res) => {
     if (!exam) {
       return res.status(404).json({ message: "Exam not found" });
     }
+
+    if (exam.status === "INACTIVE") {
+      return res.status(400).json({ message: "Bu imtihon allaqachon yakunlangan" });
+    }
+
     const user = await prisma.user.findFirst({
-      where: { user_id }
-    })
+      where: { user_id: String(user_id) }
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "Foydalanuvchi topilmadi" });
+    }
 
     const currentStudents = Array.isArray(exam.students) ? exam.students : [];
+
+    const alreadySubmitted = currentStudents.some(s => s.id === user.user_id);
+    if (alreadySubmitted) {
+      return res.status(409).json({ message: "Bu o'quvchi allaqachon javob yuborgan" });
+    }
+
     const newStudent = {
       id: user.user_id,
-      name: user.first_name ?? "" + user.last_name ?? "",
+      name: (user.first_name ?? "") + " " + (user.last_name ?? ""),
       nickname: user.username,
       responce,
-
     };
     currentStudents.push(newStudent);
 
@@ -90,7 +111,7 @@ export const getExam = async (req, res) => {
     })
     res.json(data)
   } catch (error) {
-    res.status(501).json({
+    res.status(500).json({
       message: "Error getting exams"
     })
   }

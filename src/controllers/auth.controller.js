@@ -5,18 +5,26 @@ import CryptoJS from "crypto-js";
 export const createUser = async (req, res) => {
    try {
       const { user_id, username, first_name, last_name } = req.body
+
+      const strUserId = String(user_id)
+
+      const existing = await prisma.user.findFirst({ where: { user_id: strUserId } })
+      if (existing) {
+         return res.status(409).json({ message: "User already exists" })
+      }
+
       const user = await prisma.user.create({
          data: {
-            user_id,
-            username,
-            first_name,
-            last_name,
+            user_id: strUserId,
+            username: username || null,
+            first_name: first_name || null,
+            last_name: last_name || null,
          }
       })
 
       res.status(201).json(user)
    } catch (error) {
-
+      console.log(error)
       res.status(500).json({
          message: "Error creating user"
       })
@@ -47,7 +55,7 @@ export const getUserbyId = async (req, res) => {
       );
       const responce = await prisma.user.findFirst({
          where: {
-            user_id: Number(userId)
+            user_id: String(userId)
          }
       })
       res.json(responce)

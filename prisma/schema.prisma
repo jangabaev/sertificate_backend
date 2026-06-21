@@ -8,13 +8,12 @@ datasource db {
 }
 
 model User {
-  id              Int      @id @default(autoincrement())
-  user_id         Int       @unique
-  username        String
-  first_name      String   
-  last_name       String
-  createdAt       DateTime @default(now())
-  tests            Json     @default("[]") 
+  id         Int      @id @default(autoincrement())
+  user_id    String   @unique
+  username   String?
+  first_name String?
+  last_name  String?
+  tests      Json     @default("[]")
 }
 
 enum Status {
@@ -24,10 +23,14 @@ enum Status {
 }
 
 model Test {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique
-  status      Status
-  responce    String[]
-  students    Json     @default("[]")
-  rash        Json     @default("{}")
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  status    Status   @default(ACTIVE)
+  responce  String[]
+  students  Json     @default("[]")
+  rash      Json     @default("{}")
+  createdByUserId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
+

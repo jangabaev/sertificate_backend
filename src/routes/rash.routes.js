@@ -1,12 +1,10 @@
 import { Router } from "express";
-import {
-  getRashmodule,
-  stopRashmodule,
-} from "../controllers/rash.controller.js";
+import { getRashmodule, stopRashmodule, updateExamKey } from "../controllers/rash.controller.js";
 
 const router = Router();
 
+router.post("/stop/:examId", stopRashmodule);
+router.patch("/:examId/key", updateExamKey);
 router.get("/:examId", getRashmodule);
-router.get("/stop/:examId", stopRashmodule);
 
 export default router;
