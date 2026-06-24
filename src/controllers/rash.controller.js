@@ -53,6 +53,7 @@ function calculateRash(responce, trueAnswer) {
       user_id: el.id,
       name: el.name,
       test: testTrueFalse,
+      imported: el.imported ?? false,
     });
   });
 
@@ -108,7 +109,7 @@ async function saveResultsToUsers(exam, new_students, responce) {
 
   for (let i = 0; i < new_students.length; i++) {
     const student = new_students[i];
-    if (!student.user_id) continue;
+    if (!student.user_id || student.imported) continue;
 
     const findStudent = await prisma.user.findFirst({
       where: { user_id: student.user_id },
@@ -149,11 +150,12 @@ async function saveResultsToUsers(exam, new_students, responce) {
 }
 
 async function sendCertificatesToStudents(exam, new_students) {
-  const pdfPaths = await generatePDF(exam.name, new_students, exam.responce.length);
+  const telegramStudents = new_students.filter((s) => !s.imported);
+  const pdfPaths = await generatePDF(exam.name, telegramStudents, exam.responce.length);
   let sent_count = 0;
   const failed_students = [];
 
-  for (const student of new_students) {
+  for (const student of telegramStudents) {
     if (!student.user_id) continue;
 
     const pdfPath = pdfPaths[student.user_id];

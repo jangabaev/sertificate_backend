@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import ExcelJS from "exceljs";
 
 import prisma from "../lib/prisma.js";
 
@@ -100,6 +101,91 @@ export const studentResponce = async (req, res) => {
     })
   }
 }
+
+export const importStudents = async (req, res) => {
+  try {
+    const { id } = req.params;
+    // students: [{name: "Ali Valiyev", responce: ["a","b","c",...]}]
+    const { students } = req.body;
+
+    if (!Array.isArray(students) || students.length === 0) {
+      return res.status(400).json({ message: "students array bo'lishi kerak" });
+    }
+
+    const exam = await prisma.test.findFirst({ where: { id: Number(id) } });
+    if (!exam) return res.status(404).json({ message: "Exam topilmadi" });
+
+    if (exam.status === "INACTIVE") {
+      return res.status(400).json({ message: "Bu imtihon allaqachon yakunlangan" });
+    }
+
+    const currentStudents = Array.isArray(exam.students) ? exam.students : [];
+
+    const newEntries = students.map((s, i) => ({
+      id: `import_${Date.now()}_${i}`,
+      name: s.name,
+      nickname: s.name,
+      responce: s.responce,
+      imported: true,
+    }));
+
+    await prisma.test.update({
+      where: { id: Number(id) },
+      data: { students: [...currentStudents, ...newEntries] },
+    });
+
+    res.status(201).json({ message: `${newEntries.length} ta student qo'shildi`, added: newEntries.length });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Import xatosi" });
+  }
+};
+
+export const exportExamExcel = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const exam = await prisma.test.findFirst({ where: { id: Number(id) } });
+
+    if (!exam) return res.status(404).json({ message: "Exam not found" });
+
+    const correctAnswers = Array.isArray(exam.responce) ? exam.responce : [];
+    const students = Array.isArray(exam.students) ? exam.students : [];
+    const questionCount = correctAnswers.length;
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Natijalar");
+
+    // Header row
+    sheet.columns = [
+      { header: "Ism Familya", key: "name", width: 25 },
+      ...correctAnswers.map((_, i) => ({ header: String(i + 1), key: `q${i}`, width: 5 })),
+      { header: "Jami", key: "total", width: 8 },
+    ];
+
+    // Style header
+    sheet.getRow(1).font = { bold: true };
+    sheet.getRow(1).alignment = { horizontal: "center" };
+
+    for (const student of students) {
+      const answers = Array.isArray(student.responce) ? student.responce : [];
+      const scores = correctAnswers.map((correct, i) => (answers[i] === correct ? 1 : 0));
+      const total = scores.reduce((a, b) => a + b, 0);
+
+      const row = { name: student.name };
+      scores.forEach((s, i) => { row[`q${i}`] = s; });
+      row.total = total;
+      sheet.addRow(row);
+    }
+
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename=exam_${id}.xlsx`);
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Excel yaratishda xato" });
+  }
+};
 
 export const getExam = async (req, res) => {
   try {
