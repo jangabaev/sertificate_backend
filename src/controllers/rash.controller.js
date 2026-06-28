@@ -30,25 +30,51 @@ function getJsonObject(value) {
   return value && typeof value === "object" && !Array.isArray(value) ? value : {};
 }
 
-// Hisoblash logikasi - ikkala endpoint ham shu funksiyani ishlatadi
 function calculateRash(responce, trueAnswer) {
-  const students_count = responce.length;
+  // Noto'g'ri yoki bo'sh responceli studentlarni oldindan filtrlash
+  const validResponce = responce.filter((el) => {
+    if (!Array.isArray(el.responce) || el.responce.length === 0) {
+      return false;
+    }
+    return true;
+  });
+
+  if (validResponce.length === 0) {
+    return { new_students: [], students_count: 0 };
+  }
+
+  const students_count = validResponce.length;
 
   let new_students = [];
   let currect_answers = new Array(trueAnswer.length).fill(0);
 
-  responce.forEach((el) => {
+  validResponce.forEach((el) => {
     const testTrueFalse = [];
     el.responce.forEach((ans, index) => {
-      const correct =
-        (index > 35
+      if (index >= trueAnswer.length) return;
+      let correct;
+      if (el.imported) {
+        correct = Number(ans) === 1 ? 1 : 0;
+      } else {
+        correct = (index > 35
           ? isCorrect(ans, trueAnswer[index])
           : ans?.toLocaleLowerCase() === trueAnswer[index]?.toLocaleLowerCase())
-          ? 1
-          : 0;
+          ? 1 : 0;
+      }
       currect_answers[index] += correct;
       testTrueFalse.push(correct);
     });
+
+    const totalCorrect = testTrueFalse.reduce((a, b) => a + b, 0);
+
+    if (totalCorrect === 0 && testTrueFalse.length > 0) {
+      testTrueFalse[0] = 1;
+      currect_answers[0] += 1;
+    } else if (totalCorrect === trueAnswer.length && testTrueFalse.length > 0) {
+      testTrueFalse[0] = 0;
+      currect_answers[0] -= 1;
+    }
+
     new_students.push({
       user_id: el.id,
       name: el.name,
@@ -56,13 +82,12 @@ function calculateRash(responce, trueAnswer) {
       imported: el.imported ?? false,
     });
   });
-
+ 
   const possiblity = currect_answers.map((el) => {
     const p = el / students_count;
     if (p === 0 || p === 1) return 4 * (1 - p);
     return -Math.log(p / (1 - p));
   });
-
   const min = Math.min(...possiblity);
   let summa_ball = 0;
   const balls = possiblity.map((poss) => {
@@ -83,13 +108,17 @@ function calculateRash(responce, trueAnswer) {
 
   const skil_calculateMean =
     skills_array.reduce((acc, v) => acc + v, 0) / students_count;
+
   const skil_root = Math.sqrt(
-    skills_array.reduce((acc, v) => acc + v ** 2, 0) / students_count
+    skills_array.reduce((acc, v) => acc + (v - skil_calculateMean) ** 2, 0) / students_count
   );
 
   new_students = new_students.map((el) => {
-    const z_coficent = (el.skill - skil_calculateMean) / skil_root;
-    const total_ball = Math.floor((50 + z_coficent * 20) * 100) / 100;
+    const z_coficent = skil_root > 0
+      ? (el.skill - skil_calculateMean) / skil_root
+      : 0;
+    let total_ball = Math.floor((50 + z_coficent * 10) * 100) / 100;
+    if (!isFinite(total_ball) || isNaN(total_ball)) total_ball = 50;
     return {
       ...el,
       total_ball,
@@ -100,6 +129,7 @@ function calculateRash(responce, trueAnswer) {
   });
 
   new_students.sort((a, b) => b.total_ball - a.total_ball);
+
 
   return { new_students, students_count };
 }
@@ -242,6 +272,11 @@ export const updateExamKey = async (req, res) => {
     // Agar imtihon allaqachon to'xtatilgan bo'lsa — barcha natijalarni qayta hisobla
     if (students.length > 0 && existingRash.new_students) {
       const { new_students, students_count } = calculateRash(students, responce);
+
+      if (students_count === 0) {
+        return res.status(400).json({ message: "Hech bir studentning javobi to'g'ri formatda emas" });
+      }
+
       const grade_stats = calcGradeStats(new_students);
 
       const rashData = {
@@ -280,7 +315,6 @@ export const updateExamKey = async (req, res) => {
 export const stopRashmodule = async (req, res) => {
   try {
     const { examId } = req.params;
-
     const exam = await prisma.test.findFirst({ where: { id: Number(examId) } });
     if (!exam) {
       return res.status(404).json({ message: "Exam topilmadi" });
@@ -288,6 +322,7 @@ export const stopRashmodule = async (req, res) => {
 
     const requesterUserId = req.headers.user_id ?? req.headers["user-id"] ?? req.query.user_id;
     const CEO_USER_ID = "1849659907";
+
     const isCreator = exam.createdByUserId && exam.createdByUserId === String(requesterUserId);
     const isCeo = String(requesterUserId) === CEO_USER_ID;
 
@@ -310,8 +345,13 @@ export const stopRashmodule = async (req, res) => {
     }
 
     const { new_students, students_count } = calculateRash(responce, exam.responce);
-    const grade_stats = calcGradeStats(new_students);
 
+    if (students_count === 0) {
+      return res.status(400).json({ message: "Hech bir studentning javobi to'g'ri formatda emas" });
+    }
+
+    const grade_stats = calcGradeStats(new_students);
+ 
     // Bazaga saqlash
     const saved_count = await saveResultsToUsers(exam, new_students, responce);
 
