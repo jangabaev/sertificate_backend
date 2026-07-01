@@ -72,31 +72,41 @@ export const getUserbyId = async (req, res) => {
 
 export const upBalance=async (req,res)=>{
    try {
-      const {balance}=req.body
-       const header = req.headers.token;
-       let userId = CryptoJS.AES.decrypt(header, process.env.JWT_SECRET).toString(
-         CryptoJS.enc.Utf8
-      );
+      const {balance,    
+         userId  //waqtinsha
+      }=req.body
+       const header = req.headers.token;  //waqtinsha
+       console.log(1)
+       console.log(userId)
+      //  if (!header) {
+      //    return res.status(400).json({ message: "No token provided" });
+      // }
+      //  let userId = CryptoJS.AES.decrypt(header, process.env.JWT_SECRET).toString(
+      //    CryptoJS.enc.Utf8
+      // );   waqtinsha comment
        const responce = await prisma.user.findFirst({
          where: {
             user_id: String(userId)
          }
       })
 
-      const res= await prisma.user.update({
+      console.log(responce)
+      const responceUser= await prisma.user.update({
          where:{
             user_id:String(userId)
          },
          data:{
-            balance:responce.balance+balance
+            balance:Number(responce.balance)+Number(balance)
          }
       })
 
-      res.json(res)
-       if (!header) {
-         return res.status(400).json({ message: "No token provided" });
-      }
+      return res.json(responceUser)
+       
    } catch (error) {
-      
+      console.log(error)
+
+      res.status(500).json({
+         message: "Error getting users"
+      })
    }
 }

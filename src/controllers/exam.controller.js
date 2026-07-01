@@ -27,7 +27,6 @@ export const getExams = async (req, res) => {
 export const postExam = async (req, res) => {
   try {
     const { name, status, responce, user_id, type, price } = req.body
-
     const creatorId = user_id ?? req.headers.user_id ?? req.headers["user-id"];
 
     if (!creatorId) {
@@ -78,6 +77,12 @@ export const studentResponce = async (req, res) => {
       return res.status(404).json({ message: "Foydalanuvchi topilmadi" });
     }
 
+    if ((user.balance < exam.price) && exam.type === "PREMIUM") {
+      return res.status(400).json({
+        message: "Hatolik balance etarli emas"
+      })
+    }
+
     const currentStudents = Array.isArray(exam.students) ? exam.students : [];
 
     const alreadySubmitted = currentStudents.some(s => s.id === user.user_id);
@@ -99,6 +104,14 @@ export const studentResponce = async (req, res) => {
         students: currentStudents
       }
     });
+     if ((user.balance >= exam.price) && exam.type === "PREMIUM"){
+      const  balanceUser=await prisma.user.update({
+           where: { user_id: String(user_id) },
+           data:{
+            balance:Number(user.balance)-Number(exam.price)
+           }
+      })
+     }
     res.json(updatedExam)
   } catch (error) {
     console.log(error)
@@ -130,12 +143,13 @@ export const importStudents = async (req, res) => {
 
     const newEntries = students.map((s, i) => {
       return {
-      id: `import_${Date.now()}_${i}`,
-      name: s.name,
-      nickname: s.name,
-      responce: s.responce,
-      imported: true,
-    }});
+        id: `import_${Date.now()}_${i}`,
+        name: s.name,
+        nickname: s.name,
+        responce: s.responce,
+        imported: true,
+      }
+    });
 
     await prisma.test.update({
       where: { id: Number(id) },
@@ -243,7 +257,7 @@ export const importExamExcel = async (req, res) => {
     if (exam.status === "INACTIVE") {
       return res.status(400).json({ message: "Bu imtihon allaqachon yakunlangan" });
     }
-console.log("2")
+    console.log("2")
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(req.file.buffer);
     const sheet = workbook.worksheets[0];
