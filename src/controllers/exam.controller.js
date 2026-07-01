@@ -26,7 +26,7 @@ export const getExams = async (req, res) => {
 
 export const postExam = async (req, res) => {
   try {
-    const { name, status, responce, user_id } = req.body
+    const { name, status, responce, user_id, type, price } = req.body
 
     const creatorId = user_id ?? req.headers.user_id ?? req.headers["user-id"];
 
@@ -40,6 +40,8 @@ export const postExam = async (req, res) => {
         status,
         responce,
         createdByUserId: String(creatorId),
+        type,
+        price
       }
     })
 

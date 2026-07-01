@@ -19,6 +19,7 @@ export const createUser = async (req, res) => {
             username: username || null,
             first_name: first_name || null,
             last_name: last_name || null,
+            balance:0
          }
       })
 
@@ -65,5 +66,37 @@ export const getUserbyId = async (req, res) => {
       res.status(500).json({
          message: "Error getting users"
       })
+   }
+}
+
+
+export const upBalance=async (req,res)=>{
+   try {
+      const {balance}=req.body
+       const header = req.headers.token;
+       let userId = CryptoJS.AES.decrypt(header, process.env.JWT_SECRET).toString(
+         CryptoJS.enc.Utf8
+      );
+       const responce = await prisma.user.findFirst({
+         where: {
+            user_id: String(userId)
+         }
+      })
+
+      const res= await prisma.user.update({
+         where:{
+            user_id:String(userId)
+         },
+         data:{
+            balance:responce.balance+balance
+         }
+      })
+
+      res.json(res)
+       if (!header) {
+         return res.status(400).json({ message: "No token provided" });
+      }
+   } catch (error) {
+      
    }
 }
