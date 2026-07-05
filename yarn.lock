@@ -66,13 +66,6 @@
     lodash.isundefined "^3.0.1"
     lodash.uniq "^4.5.0"
 
-"@mongodb-js/saslprep@^1.3.0":
-  version "1.3.1"
-  resolved "https://registry.npmjs.org/@mongodb-js/saslprep/-/saslprep-1.3.1.tgz"
-  integrity sha512-6nZrq5kfAz0POWyhljnbWQQJQ5uT8oE2ddX303q1uY0tWsivWKgBDXBBvuFPwOqRRalXJuVO9EjOdVtuhLX0zg==
-  dependencies:
-    sparse-bitfield "^3.0.3"
-
 "@prisma/client@6":
   version "6.19.3"
   resolved "https://registry.npmjs.org/@prisma/client/-/client-6.19.3.tgz"
@@ -140,18 +133,6 @@
   version "14.18.63"
   resolved "https://registry.npmjs.org/@types/node/-/node-14.18.63.tgz"
   integrity sha512-fAtCfv4jJg+ExtXhvCkCqUKZ+4ok/JQk01qDKhL5BDDoS3AxKXhV5/MAVUZyQnSEd2GT92fkgZl0pz0Q0AzcIQ==
-
-"@types/webidl-conversions@*":
-  version "7.0.3"
-  resolved "https://registry.npmjs.org/@types/webidl-conversions/-/webidl-conversions-7.0.3.tgz"
-  integrity sha512-CiJJvcRtIgzadHCYXw7dqEnMNRjhGZlYK05Mj9OyktqV8uVT8fD2BFOB7S1uwBE3Kj2Z+4UyPmFw/Ixgw/LAlA==
-
-"@types/whatwg-url@^11.0.2":
-  version "11.0.5"
-  resolved "https://registry.npmjs.org/@types/whatwg-url/-/whatwg-url-11.0.5.tgz"
-  integrity sha512-coYR071JRaHa+xoEvvYqvnIHaVqaYrLPbsufM9BF63HkwI5Lgmy2QR8Q5K/lYDYo5AK82wOvSOS0UsLTpTG7uQ==
-  dependencies:
-    "@types/webidl-conversions" "*"
 
 accepts@^2.0.0:
   version "2.0.0"
@@ -424,11 +405,6 @@ brotli@^1.3.2:
   integrity sha512-oTKjJdShmDuGW94SyyaoQvAjf30dZaHnjJ8uAF+u2/vGJkJbJPJAT1gDiOJP5v1Zb6f9KEyW/1HpuaWIXtGHPg==
   dependencies:
     base64-js "^1.1.2"
-
-bson@^6.10.4:
-  version "6.10.4"
-  resolved "https://registry.npmjs.org/bson/-/bson-6.10.4.tgz"
-  integrity sha512-WIsKqkSC0ABoBJuT1LEX+2HEvNmNKKgnTAyd0fL8qzK4SH2i9NXg+t08YtdZp/V9IZ33cxe3iV4yM0qg8lMQng==
 
 buffer-crc32@^0.2.1, buffer-crc32@^0.2.13:
   version "0.2.13"
@@ -721,7 +697,7 @@ debug@^3.2.7:
   dependencies:
     ms "^2.1.1"
 
-debug@^4, debug@^4.3.5, debug@^4.4.0, debug@4.x:
+debug@^4, debug@^4.3.5, debug@^4.4.0:
   version "4.4.3"
   resolved "https://registry.npmjs.org/debug/-/debug-4.4.3.tgz"
   integrity sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA==
@@ -1737,11 +1713,6 @@ jws@^3.2.2:
     jwa "^1.4.1"
     safe-buffer "^5.0.1"
 
-kareem@2.6.3:
-  version "2.6.3"
-  resolved "https://registry.npmjs.org/kareem/-/kareem-2.6.3.tgz"
-  integrity sha512-C3iHfuGUXK2u8/ipq9LfjFfXFxAZMQJJq7vLS45r3D9Y2xQ/m4S8zaR4zMLFWh9AsNPXmcFfUDhTEO8UIC/V6Q==
-
 lazystream@^1.0.0:
   version "1.0.1"
   resolved "https://registry.npmjs.org/lazystream/-/lazystream-1.0.1.tgz"
@@ -1894,11 +1865,6 @@ media-typer@0.3.0:
   resolved "https://registry.npmjs.org/media-typer/-/media-typer-0.3.0.tgz"
   integrity sha512-dq+qelQ9akHpcOl/gUVRTxVIOkAJ1wR3QAvb4RsVjS8oVoFjDGTc679wJYmUmknUF5HwMLOgb5O+a3KxfWapPQ==
 
-memory-pager@^1.0.2:
-  version "1.5.0"
-  resolved "https://registry.npmjs.org/memory-pager/-/memory-pager-1.5.0.tgz"
-  integrity sha512-ZS4Bp4r/Zoeq6+NLJpP+0Zzm0pR8whtGPf1XExKLJBAczGMnSi3It14OiNCStjQjM6NU1okjQGSxgEZN8eBYKg==
-
 merge-descriptors@^2.0.0:
   version "2.0.0"
   resolved "https://registry.npmjs.org/merge-descriptors/-/merge-descriptors-2.0.0.tgz"
@@ -1966,49 +1932,7 @@ minimist@^1.2.6:
   dependencies:
     minimist "^1.2.6"
 
-mongodb-connection-string-url@^3.0.2:
-  version "3.0.2"
-  resolved "https://registry.npmjs.org/mongodb-connection-string-url/-/mongodb-connection-string-url-3.0.2.tgz"
-  integrity sha512-rMO7CGo/9BFwyZABcKAWL8UJwH/Kc2x0g72uhDWzG48URRax5TCIcJ7Rc3RZqffZzO/Gwff/jyKwCU9TN8gehA==
-  dependencies:
-    "@types/whatwg-url" "^11.0.2"
-    whatwg-url "^14.1.0 || ^13.0.0"
-
-mongodb@~6.20.0:
-  version "6.20.0"
-  resolved "https://registry.npmjs.org/mongodb/-/mongodb-6.20.0.tgz"
-  integrity sha512-Tl6MEIU3K4Rq3TSHd+sZQqRBoGlFsOgNrH5ltAcFBV62Re3Fd+FcaVf8uSEQFOJ51SDowDVttBTONMfoYWrWlQ==
-  dependencies:
-    "@mongodb-js/saslprep" "^1.3.0"
-    bson "^6.10.4"
-    mongodb-connection-string-url "^3.0.2"
-
-mongoose@^8.19.0:
-  version "8.19.0"
-  resolved "https://registry.npmjs.org/mongoose/-/mongoose-8.19.0.tgz"
-  integrity sha512-Z4iRiBkC7aR7a/rxQxtUAUBasFdiXkBuv3EY4NwkRbs92xKA4pwzi1Q4D+odFBe+ChahMNAYg2JP+7tWzZM0sQ==
-  dependencies:
-    bson "^6.10.4"
-    kareem "2.6.3"
-    mongodb "~6.20.0"
-    mpath "0.9.0"
-    mquery "5.0.0"
-    ms "2.1.3"
-    sift "17.1.3"
-
-mpath@0.9.0:
-  version "0.9.0"
-  resolved "https://registry.npmjs.org/mpath/-/mpath-0.9.0.tgz"
-  integrity sha512-ikJRQTk8hw5DEoFVxHG1Gn9T/xcjtdnOKIU1JTmGjZZlg9LST2mBLmcX3/ICIbgJydT2GOc15RnNy5mHmzfSew==
-
-mquery@5.0.0:
-  version "5.0.0"
-  resolved "https://registry.npmjs.org/mquery/-/mquery-5.0.0.tgz"
-  integrity sha512-iQMncpmEK8R8ncT8HJGsGc9Dsp8xcgYMVSbs5jgnm1lFHTZqMJTUWTDx1LBO8+mK3tPNZWFLBghQEIOULSTHZg==
-  dependencies:
-    debug "4.x"
-
-ms@^2.1.1, ms@^2.1.3, ms@2.1.3:
+ms@^2.1.1, ms@^2.1.3:
   version "2.1.3"
   resolved "https://registry.npmjs.org/ms/-/ms-2.1.3.tgz"
   integrity sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==
@@ -2633,24 +2557,12 @@ side-channel@^1.1.0:
     side-channel-map "^1.0.1"
     side-channel-weakmap "^1.0.2"
 
-sift@17.1.3:
-  version "17.1.3"
-  resolved "https://registry.npmjs.org/sift/-/sift-17.1.3.tgz"
-  integrity sha512-Rtlj66/b0ICeFzYTuNvX/EF1igRbbnGSvEyT79McoZa/DeGhMyC5pWKOEsZKnpkqtSeovd5FL/bjHWC3CIIvCQ==
-
 simple-update-notifier@^2.0.0:
   version "2.0.0"
   resolved "https://registry.npmjs.org/simple-update-notifier/-/simple-update-notifier-2.0.0.tgz"
   integrity sha512-a2B9Y0KlNXl9u/vsW6sTIu9vGEpfKu2wRV6l1H3XEas/0gUIzGzBoP/IouTcUQbm9JWZLH3COxyn03TYlFax6w==
   dependencies:
     semver "^7.5.3"
-
-sparse-bitfield@^3.0.3:
-  version "3.0.3"
-  resolved "https://registry.npmjs.org/sparse-bitfield/-/sparse-bitfield-3.0.3.tgz"
-  integrity sha512-kvzhi7vqKTfkh0PZU+2D2PIllw2ymqJKujUcyPMd9Y75Nv4nPbGJZXNhxsgdQab2BmlDct1YnfQCguEvHr7VsQ==
-  dependencies:
-    memory-pager "^1.0.2"
 
 sshpk@^1.18.0, sshpk@^1.7.0:
   version "1.18.0"
@@ -2825,13 +2737,6 @@ tough-cookie@~2.5.0:
   dependencies:
     psl "^1.1.28"
     punycode "^2.1.1"
-
-tr46@^5.1.0:
-  version "5.1.1"
-  resolved "https://registry.npmjs.org/tr46/-/tr46-5.1.1.tgz"
-  integrity sha512-hdF5ZgjTqgAntKkklYw0R03MG2x/bSzTtkxmIRw/sTNV8YXsCJ1tfLAX23lhxhHJlEf3CRCOCGGWw3vI3GaSPw==
-  dependencies:
-    punycode "^2.3.1"
 
 "traverse@>=0.3.0 <0.4":
   version "0.3.9"
@@ -3027,19 +2932,6 @@ verror@1.10.0:
     assert-plus "^1.0.0"
     core-util-is "1.0.2"
     extsprintf "^1.2.0"
-
-webidl-conversions@^7.0.0:
-  version "7.0.0"
-  resolved "https://registry.npmjs.org/webidl-conversions/-/webidl-conversions-7.0.0.tgz"
-  integrity sha512-VwddBukDzu71offAQR975unBIGqfKZpM+8ZX6ySk8nYhVoo5CYaZyzt3YBvYtRtO+aoGlqxPg/B87NGVZ/fu6g==
-
-"whatwg-url@^14.1.0 || ^13.0.0":
-  version "14.2.0"
-  resolved "https://registry.npmjs.org/whatwg-url/-/whatwg-url-14.2.0.tgz"
-  integrity sha512-De72GdQZzNTUBBChsXueQUnPKDkg/5A5zp7pFDuQAj5UFoENpiACU0wlCvzpAGnTkj++ihpKwKyYewn/XNUbKw==
-  dependencies:
-    tr46 "^5.1.0"
-    webidl-conversions "^7.0.0"
 
 which-boxed-primitive@^1.1.0, which-boxed-primitive@^1.1.1:
   version "1.1.1"

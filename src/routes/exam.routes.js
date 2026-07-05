@@ -8,6 +8,7 @@ import {
   importStudents,
   importExamExcel,
   upload,
+  buyTest
 } from "../controllers/exam.controller.js";
 
 const router = Router();
@@ -19,5 +20,6 @@ router.post("/:id/import", importStudents)
 router.post("/import-excel", upload.single("file"), importExamExcel)
 router.get("/:id/export", exportExamExcel)
 router.get("/:id", getExam)
+router.post("/buy",buyTest)
 
 export default router

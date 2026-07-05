@@ -4,6 +4,7 @@ import multer from "multer";
 
 import prisma from "../lib/prisma.js";
 import { isCorrect } from "../utils/checkmath.js";
+import { deshifr } from "../utils/dechifr.js";
 
 export const upload = multer({ storage: multer.memoryStorage() });
 
@@ -53,6 +54,58 @@ export const postExam = async (req, res) => {
   }
 }
 
+export const buyTest=async(req,res)=>{
+  try {
+    const {id}=req.body
+    const header=req.headers.token
+    const user_id=deshifr(header)
+    if(!user_id){
+      return res.status(400).json({ message: "Test yaratish uchun header kerak" });
+    }
+
+    const user=await prisma.user.findFirst({
+      where:{user_id}
+    })
+
+    if(!user){
+      return res.status(400).json({ message: "Do not found user" });
+    }
+
+    const test=await prisma.test.findFirst({
+      where:{id:Number(id)}
+    })
+
+    if(!test){
+      return res.status(400).json({ message: "Don not found exam" });
+    }
+
+    if(test.price>user.balance){
+      return res.status(401).json({ message: "user don't have enough money" });
+    }
+
+    const userUpdate=await prisma.user.update({
+      where:{
+        user_id
+      },
+      data:{
+        balance:user.balance-test.price
+      }
+    })
+
+    const responce=await prisma.test.update({
+      where:{id:Number(id)},
+      data:{
+        userTest: [...test.userTest,user_id]
+      }
+    })
+
+    res.status(201).json(responce)
+
+  } catch (error) {
+     return res.status(400).json({ message: "Hatolik yuz berdi" });
+  }
+}
+
 export const studentResponce = async (req, res) => {
   try {
     const { id } = req.params
@@ -77,7 +130,7 @@ export const studentResponce = async (req, res) => {
       return res.status(404).json({ message: "Foydalanuvchi topilmadi" });
     }
 
-    if ((user.balance < exam.price) && exam.type === "PREMIUM") {
+    if ((!exam.userTest.includes(String(user_id))) && exam.type === "PREMIUM") {
       return res.status(400).json({
         message: "Hatolik balance etarli emas"
       })
@@ -104,14 +157,6 @@ export const studentResponce = async (req, res) => {
         students: currentStudents
       }
     });
-     if ((user.balance >= exam.price) && exam.type === "PREMIUM"){
-      const  balanceUser=await prisma.user.update({
-           where: { user_id: String(user_id) },
-           data:{
-            balance:Number(user.balance)-Number(exam.price)
-           }
-      })
-     }
     res.json(updatedExam)
   } catch (error) {
     console.log(error)

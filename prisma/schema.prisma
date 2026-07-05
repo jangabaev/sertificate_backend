@@ -41,5 +41,6 @@ model Test {
   updatedAt           DateTime      @updatedAt
   type                TestType      @default(FREE)
   price               Int?
+  userTest            String[]     
 }
 

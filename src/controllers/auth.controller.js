@@ -5,6 +5,7 @@ import CryptoJS from "crypto-js";
 export const createUser = async (req, res) => {
    try {
       const { user_id, username, first_name, last_name } = req.body
+      console.log(1)
 
       const strUserId = String(user_id)
 
@@ -72,12 +73,12 @@ export const getUserbyId = async (req, res) => {
 
 export const upBalance=async (req,res)=>{
    try {
-      const {balance,    
+      const {amount,    
          userId  //waqtinsha
       }=req.body
-       const header = req.headers.token;  //waqtinsha
-       console.log(1)
-       console.log(userId)
+      console.log(12)
+      //  const header = req.headers.token;  //waqtinsha
+
       //  if (!header) {
       //    return res.status(400).json({ message: "No token provided" });
       // }
@@ -96,7 +97,7 @@ export const upBalance=async (req,res)=>{
             user_id:String(userId)
          },
          data:{
-            balance:Number(responce.balance)+Number(balance)
+            balance:Number(responce.balance)+Number(amount)
          }
       })
 
