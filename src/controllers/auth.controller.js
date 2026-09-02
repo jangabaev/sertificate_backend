@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
-import prisma from "../lib/prisma.js"; // Agar fayl kengaytmasi bo'lsa .js qo'shing
-import CryptoJS from "crypto-js";
+import prisma from "../lib/prisma.js";
+import { deshifr } from "../utils/dechifr.js";
 
 export const createUser = async (req, res) => {
   try {
@@ -52,9 +52,7 @@ export const getUserbyId = async (req, res) => {
     if (!header) {
       return res.status(400).json({ message: "No token provided" });
     }
-    let userId = CryptoJS.AES.decrypt(header, process.env.JWT_SECRET).toString(
-      CryptoJS.enc.Utf8,
-    );
+    let userId = deshifr(header);
     const responce = await prisma.user.findFirst({
       where: {
         user_id: String(userId),
@@ -72,26 +70,25 @@ export const getUserbyId = async (req, res) => {
 
 export const upBalance = async (req, res) => {
   try {
-    const {
-      amount,
-      userId, //waqtinsha
-    } = req.body;
-    console.log(12);
-    //  const header = req.headers.token;  //waqtinsha
+    const token = req.headers.token;
+    const { amount } = req.body;
 
-    //  if (!header) {
-    //    return res.status(400).json({ message: "No token provided" });
-    // }
-    //  let userId = CryptoJS.AES.decrypt(header, process.env.JWT_SECRET).toString(
-    //    CryptoJS.enc.Utf8
-    // );   waqtinsha comment
+    if (!token) {
+      return res.status(400).json({ message: "No token provided" });
+    }
+
+    let userId = deshifr(token);
+
     const responce = await prisma.user.findFirst({
       where: {
         user_id: String(userId),
       },
     });
 
-    console.log(responce);
+    if (!responce) {
+      return res.status(400).json({ message: "No token provided" });
+    }
+
     const responceUser = await prisma.user.update({
       where: {
         user_id: String(userId),
