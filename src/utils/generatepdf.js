@@ -9,11 +9,14 @@ export async function generatePDF(examName, students, totalQuestions) {
   await Promise.all(
     students.map((student) => {
       const safeName = (student.name || "student").replace(/\s+/g, "_");
-      const safeId = String(student.user_id || "unknown").replace(/[^a-zA-Z0-9_-]/g, "");
+      const safeId = String(student.user_id || "unknown").replace(
+        /[^a-zA-Z0-9_-]/g,
+        "",
+      );
       const outputPath = `${outputDir}/${safeName}_${safeId}.pdf`;
       pathMap[student.user_id] = outputPath;
-      return generateCertificate({ student, examName, totalQuestions, outputPath });
-    })
+      return generateCertificate({ student, examName, outputPath });
+    }),
   );
 
   return pathMap;

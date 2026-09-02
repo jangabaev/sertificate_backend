@@ -1,4 +1,3 @@
-import { Prisma } from "@prisma/client";
 import ExcelJS from "exceljs";
 import multer from "multer";
 
@@ -12,6 +11,14 @@ export const getExams = async (req, res) => {
   try {
     const { sort_by } = req.query;
 
+    console.log(sort_by);
+
+    if (!sort_by) {
+      const exams = await prisma.test.findMany();
+      console.log(exams);
+      return res.json(exams);
+    }
+
     const statusMap = { active: "ACTIVE", noactive: "INACTIVE" };
     const where = statusMap[sort_by] ? { status: statusMap[sort_by] } : {};
 
@@ -19,19 +26,23 @@ export const getExams = async (req, res) => {
       where,
       orderBy: { id: "asc" },
     });
+
     res.json(exams);
   } catch (error) {
     res.status(500).json({ message: "Error getting exams" });
   }
-}
+};
 
 export const postExam = async (req, res) => {
   try {
-    const { name, status, responce, user_id, type, price } = req.body
+    const { name, status, responce, user_id, type, price } = req.body;
+    console.log(user_id);
     const creatorId = user_id ?? req.headers.user_id ?? req.headers["user-id"];
 
     if (!creatorId) {
-      return res.status(400).json({ message: "Test yaratish uchun user_id kerak" });
+      return res
+        .status(400)
+        .json({ message: "Test yaratish uchun user_id kerak" });
     }
 
     const exam = await prisma.test.create({
@@ -41,77 +52,78 @@ export const postExam = async (req, res) => {
         responce,
         createdByUserId: String(creatorId),
         type,
-        price
-      }
-    })
+        price,
+      },
+    });
 
-    res.status(201).json(exam)
+    res.status(201).json(exam);
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(500).json({
-      message: "Error creating user"
-    })
+      message: "Error creating user",
+    });
   }
-}
+};
 
-export const buyTest=async(req,res)=>{
+export const buyTest = async (req, res) => {
   try {
-    const {id}=req.body
-    const header=req.headers.token
-    const user_id=deshifr(header)
-    if(!user_id){
-      return res.status(400).json({ message: "Test yaratish uchun header kerak" });
+    const { id } = req.body;
+    const header = req.headers.token;
+    const user_id = deshifr(header);
+    if (!user_id) {
+      return res
+        .status(400)
+        .json({ message: "Test yaratish uchun header kerak" });
     }
 
-    const user=await prisma.user.findFirst({
-      where:{user_id}
-    })
+    const user = await prisma.user.findFirst({
+      where: { user_id },
+    });
 
-    if(!user){
+    if (!user) {
       return res.status(400).json({ message: "Do not found user" });
     }
 
-    const test=await prisma.test.findFirst({
-      where:{id:Number(id)}
-    })
+    const test = await prisma.test.findFirst({
+      where: { id: Number(id) },
+    });
 
-    if(!test){
+    if (!test) {
       return res.status(400).json({ message: "Don not found exam" });
     }
 
-    if(test.price>user.balance){
+    if (test.price > user.balance) {
       return res.status(401).json({ message: "user don't have enough money" });
     }
 
-    const userUpdate=await prisma.user.update({
-      where:{
-        user_id
+    const userUpdate = await prisma.user.update({
+      where: {
+        user_id,
       },
-      data:{
-        balance:user.balance-test.price
-      }
-    })
+      data: {
+        balance: user.balance - test.price,
+      },
+    });
 
-    const responce=await prisma.test.update({
-      where:{id:Number(id)},
-      data:{
-        userTest: [...test.userTest,user_id]
-      }
-    })
+    const responce = await prisma.test.update({
+      where: { id: Number(id) },
+      data: {
+        userTest: [...test.userTest, user_id],
+      },
+    });
 
-    res.status(201).json(responce)
-
+    res.status(201).json(responce);
   } catch (error) {
-     return res.status(400).json({ message: "Hatolik yuz berdi" });
+    return res.status(400).json({ message: "Hatolik yuz berdi" });
   }
-}
+};
 
 export const studentResponce = async (req, res) => {
   try {
-    const { id } = req.params
-    const { user_id, responce } = req.body
+    const { id } = req.params;
+    const { user_id, responce } = req.body;
     const exam = await prisma.test.findFirst({
-      where: { id: Number(id) }
+      where: { id: Number(id) },
     });
 
     if (!exam) {
@@ -119,28 +131,32 @@ export const studentResponce = async (req, res) => {
     }
 
     if (exam.status === "INACTIVE") {
-      return res.status(400).json({ message: "Bu imtihon allaqachon yakunlangan" });
+      return res
+        .status(400)
+        .json({ message: "Bu imtihon allaqachon yakunlangan" });
     }
 
     const user = await prisma.user.findFirst({
-      where: { user_id: String(user_id) }
+      where: { user_id: String(user_id) },
     });
 
     if (!user) {
       return res.status(404).json({ message: "Foydalanuvchi topilmadi" });
     }
 
-    if ((!exam.userTest.includes(String(user_id))) && exam.type === "PREMIUM") {
+    if (!exam.userTest.includes(String(user_id)) && exam.type === "PREMIUM") {
       return res.status(400).json({
-        message: "Hatolik balance etarli emas"
-      })
+        message: "Hatolik balance etarli emas",
+      });
     }
 
     const currentStudents = Array.isArray(exam.students) ? exam.students : [];
 
-    const alreadySubmitted = currentStudents.some(s => s.id === user.user_id);
+    const alreadySubmitted = currentStudents.some((s) => s.id === user.user_id);
     if (alreadySubmitted) {
-      return res.status(409).json({ message: "Bu o'quvchi allaqachon javob yuborgan" });
+      return res
+        .status(409)
+        .json({ message: "Bu o'quvchi allaqachon javob yuborgan" });
     }
 
     const newStudent = {
@@ -154,24 +170,23 @@ export const studentResponce = async (req, res) => {
     const updatedExam = await prisma.test.update({
       where: { id: Number(id) },
       data: {
-        students: currentStudents
-      }
+        students: currentStudents,
+      },
     });
-    res.json(updatedExam)
+    res.json(updatedExam);
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(500).json({
-      message: "Error getting users"
-    })
+      message: "Error getting users",
+    });
   }
-}
+};
 
 export const importStudents = async (req, res) => {
   try {
     const { id } = req.params;
     // students: [{name: "Ali Valiyev", responce: ["a","b","c",...]}]
     const { students } = req.body;
-
 
     if (!Array.isArray(students) || students.length === 0) {
       return res.status(400).json({ message: "students array bo'lishi kerak" });
@@ -181,7 +196,9 @@ export const importStudents = async (req, res) => {
     if (!exam) return res.status(404).json({ message: "Exam topilmadi" });
 
     if (exam.status === "INACTIVE") {
-      return res.status(400).json({ message: "Bu imtihon allaqachon yakunlangan" });
+      return res
+        .status(400)
+        .json({ message: "Bu imtihon allaqachon yakunlangan" });
     }
 
     const currentStudents = Array.isArray(exam.students) ? exam.students : [];
@@ -193,7 +210,7 @@ export const importStudents = async (req, res) => {
         nickname: s.name,
         responce: s.responce,
         imported: true,
-      }
+      };
     });
 
     await prisma.test.update({
@@ -201,7 +218,10 @@ export const importStudents = async (req, res) => {
       data: { students: [...currentStudents, ...newEntries] },
     });
 
-    res.status(201).json({ message: `${newEntries.length} ta student qo'shildi`, added: newEntries.length });
+    res.status(201).json({
+      message: `${newEntries.length} ta student qo'shildi`,
+      added: newEntries.length,
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Import xatosi" });
@@ -225,7 +245,11 @@ export const exportExamExcel = async (req, res) => {
     // Header row
     sheet.columns = [
       { header: "Ism Familya", key: "name", width: 25 },
-      ...correctAnswers.map((_, i) => ({ header: String(i + 1), key: `q${i}`, width: 5 })),
+      ...correctAnswers.map((_, i) => ({
+        header: String(i + 1),
+        key: `q${i}`,
+        width: 5,
+      })),
       { header: "Jami", key: "total", width: 8 },
     ];
 
@@ -239,27 +263,36 @@ export const exportExamExcel = async (req, res) => {
       let scores;
       if (student.imported) {
         // Import qilingan talabalar: responce allaqachon 0/1 formatida
-        scores = answers.map(a => Number(a) === 1 ? 1 : 0);
+        scores = answers.map((a) => (Number(a) === 1 ? 1 : 0));
       } else {
         // Telegram foydalanuvchilar: haqiqiy javoblarni to'g'ri javob bilan solishtir
         scores = correctAnswers.map((correct, i) => {
           const ans = answers[i];
-          const isRight = i > 35
-            ? isCorrect(ans, correct)
-            : ans?.toLocaleLowerCase() === correct?.toLocaleLowerCase();
+          const isRight =
+            i > 35
+              ? isCorrect(ans, correct)
+              : ans?.toLocaleLowerCase() === correct?.toLocaleLowerCase();
           return isRight ? 1 : 0;
         });
       }
 
       const total = scores.reduce((a, b) => a + b, 0);
       const row = { name: student.name };
-      scores.forEach((s, i) => { row[`q${i}`] = s === 1 ? "to'g'ri" : "xato"; });
+      scores.forEach((s, i) => {
+        row[`q${i}`] = s === 1 ? "to'g'ri" : "xato";
+      });
       row.total = total;
       sheet.addRow(row);
     }
 
-    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    res.setHeader("Content-Disposition", `attachment; filename=exam_${id}.xlsx`);
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=exam_${id}.xlsx`,
+    );
     await workbook.xlsx.write(res);
     res.end();
   } catch (error) {
@@ -270,25 +303,24 @@ export const exportExamExcel = async (req, res) => {
 
 export const getExam = async (req, res) => {
   try {
-    const { id } = req.params
+    const { id } = req.params;
     const data = await prisma.test.findFirst({
       where: {
-        id: Number(id)
-      }
-    })
-    res.json(data)
+        id: Number(id),
+      },
+    });
+    res.json(data);
   } catch (error) {
     res.status(500).json({
-      message: "Error getting exams"
-    })
+      message: "Error getting exams",
+    });
   }
-}
+};
 
 export const importExamExcel = async (req, res) => {
   try {
     const test_id = req.body.test_id;
     const user_id = req.body.user_id;
-    console.log("1")
     if (!req.file) {
       return res.status(400).json({ message: "Excel fayl yuborilmadi" });
     }
@@ -296,13 +328,16 @@ export const importExamExcel = async (req, res) => {
       return res.status(400).json({ message: "test_id yuborilmadi" });
     }
 
-    const exam = await prisma.test.findFirst({ where: { id: Number(test_id) } });
+    const exam = await prisma.test.findFirst({
+      where: { id: Number(test_id) },
+    });
     if (!exam) return res.status(404).json({ message: "Exam topilmadi" });
 
     if (exam.status === "INACTIVE") {
-      return res.status(400).json({ message: "Bu imtihon allaqachon yakunlangan" });
+      return res
+        .status(400)
+        .json({ message: "Bu imtihon allaqachon yakunlangan" });
     }
-    console.log("2")
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(req.file.buffer);
     const sheet = workbook.worksheets[0];

@@ -27,11 +27,12 @@ function calcGradeStats(students) {
 }
 
 function getJsonObject(value) {
-  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? value
+    : {};
 }
 
 function calculateRash(responce, trueAnswer) {
-  // Noto'g'ri yoki bo'sh responceli studentlarni oldindan filtrlash
   const validResponce = responce.filter((el) => {
     if (!Array.isArray(el.responce) || el.responce.length === 0) {
       return false;
@@ -54,12 +55,23 @@ function calculateRash(responce, trueAnswer) {
       if (index >= trueAnswer.length) return;
       let correct;
       if (el.imported) {
-        correct = Number(ans) === 1 ? 1 : 0;
+        const value = Number(ans);
+
+        if (value !== 0 && value !== 1) {
+          console.warn(`Noto'g'ri Excel qiymati: ${ans}`);
+          correct = 0;
+        } else {
+          correct = value;
+        }
       } else {
-        correct = (index > 35
-          ? isCorrect(ans, trueAnswer[index])
-          : ans?.toLocaleLowerCase() === trueAnswer[index]?.toLocaleLowerCase())
-          ? 1 : 0;
+        correct = (
+          index > 35
+            ? isCorrect(ans, trueAnswer[index])
+            : ans?.toLocaleLowerCase() ===
+              trueAnswer[index]?.toLocaleLowerCase()
+        )
+          ? 1
+          : 0;
       }
       currect_answers[index] += correct;
       testTrueFalse.push(correct);
@@ -82,7 +94,7 @@ function calculateRash(responce, trueAnswer) {
       imported: el.imported ?? false,
     });
   });
- 
+
   const possiblity = currect_answers.map((el) => {
     const p = el / students_count;
     if (p === 0 || p === 1) return 4 * (1 - p);
@@ -110,14 +122,20 @@ function calculateRash(responce, trueAnswer) {
     skills_array.reduce((acc, v) => acc + v, 0) / students_count;
 
   const skil_root = Math.sqrt(
-    skills_array.reduce((acc, v) => acc + (v - skil_calculateMean) ** 2, 0) / students_count
+    skills_array.reduce((acc, v) => acc + (v - skil_calculateMean) ** 2, 0) /
+      students_count,
   );
 
   new_students = new_students.map((el) => {
-    const z_coficent = skil_root > 0
-      ? (el.skill - skil_calculateMean) / skil_root
-      : 0;
+    const z_coficent =
+      skil_root > 0 ? (el.skill - skil_calculateMean) / skil_root : 0;
     let total_ball = Math.floor((50 + z_coficent * 10) * 100) / 100;
+
+    if (total_ball > 90) {
+      total_ball = 90 + (total_ball - 90) * 0.1;
+    }
+
+    total_ball = Math.floor(total_ball * 100) / 100;
     if (!isFinite(total_ball) || isNaN(total_ball)) total_ball = 50;
     return {
       ...el,
@@ -129,7 +147,6 @@ function calculateRash(responce, trueAnswer) {
   });
 
   new_students.sort((a, b) => b.total_ball - a.total_ball);
-
 
   return { new_students, students_count };
 }
@@ -146,7 +163,9 @@ async function saveResultsToUsers(exam, new_students, responce) {
     });
     if (!findStudent) continue;
 
-    const currentTests = Array.isArray(findStudent.tests) ? findStudent.tests : [];
+    const currentTests = Array.isArray(findStudent.tests)
+      ? findStudent.tests
+      : [];
 
     const studentOriginal = responce.find((r) => r.id === student.user_id);
     const nextTest = {
@@ -165,7 +184,9 @@ async function saveResultsToUsers(exam, new_students, responce) {
     const testIndex = currentTests.findIndex((test) => test?.id === exam.id);
     const nextTests =
       testIndex >= 0
-        ? currentTests.map((test, index) => (index === testIndex ? nextTest : test))
+        ? currentTests.map((test, index) =>
+            index === testIndex ? nextTest : test,
+          )
         : [...currentTests, nextTest];
 
     await prisma.user.update({
@@ -181,7 +202,11 @@ async function saveResultsToUsers(exam, new_students, responce) {
 
 async function sendCertificatesToStudents(exam, new_students) {
   const telegramStudents = new_students.filter((s) => !s.imported);
-  const pdfPaths = await generatePDF(exam.name, telegramStudents, exam.responce.length);
+  const pdfPaths = await generatePDF(
+    exam.name,
+    telegramStudents,
+    exam.responce.length,
+  );
   let sent_count = 0;
   const failed_students = [];
 
@@ -241,7 +266,9 @@ export const updateExamKey = async (req, res) => {
     const { responce } = req.body;
 
     if (!Array.isArray(responce) || responce.length === 0) {
-      return res.status(400).json({ message: "responce to'ldirilgan array bo'lishi kerak" });
+      return res
+        .status(400)
+        .json({ message: "responce to'ldirilgan array bo'lishi kerak" });
     }
 
     const exam = await prisma.test.findFirst({ where: { id: Number(examId) } });
@@ -249,16 +276,22 @@ export const updateExamKey = async (req, res) => {
       return res.status(404).json({ message: "Exam topilmadi" });
     }
 
-    const requesterUserId = req.headers.user_id ?? req.headers["user-id"] ?? req.query.user_id;
+    const requesterUserId =
+      req.headers.user_id ?? req.headers["user-id"] ?? req.query.user_id;
     const CEO_USER_ID = "1849659907";
-    const isCreator = exam.createdByUserId && exam.createdByUserId === String(requesterUserId);
+    const isCreator =
+      exam.createdByUserId && exam.createdByUserId === String(requesterUserId);
     const isCeo = String(requesterUserId) === CEO_USER_ID;
 
     if (exam.createdByUserId && !requesterUserId) {
-      return res.status(400).json({ message: "Kalitni o'zgartirish uchun user_id kerak" });
+      return res
+        .status(400)
+        .json({ message: "Kalitni o'zgartirish uchun user_id kerak" });
     }
     if (exam.createdByUserId && !isCreator && !isCeo) {
-      return res.status(403).json({ message: "Bu testni faqat yaratgan odam yoki CEO o'zgartira oladi" });
+      return res.status(403).json({
+        message: "Bu testni faqat yaratgan odam yoki CEO o'zgartira oladi",
+      });
     }
 
     await prisma.test.update({
@@ -271,10 +304,15 @@ export const updateExamKey = async (req, res) => {
 
     // Agar imtihon allaqachon to'xtatilgan bo'lsa — barcha natijalarni qayta hisobla
     if (students.length > 0 && existingRash.new_students) {
-      const { new_students, students_count } = calculateRash(students, responce);
+      const { new_students, students_count } = calculateRash(
+        students,
+        responce,
+      );
 
       if (students_count === 0) {
-        return res.status(400).json({ message: "Hech bir studentning javobi to'g'ri formatda emas" });
+        return res.status(400).json({
+          message: "Hech bir studentning javobi to'g'ri formatda emas",
+        });
       }
 
       const grade_stats = calcGradeStats(new_students);
@@ -293,7 +331,11 @@ export const updateExamKey = async (req, res) => {
       });
 
       const examForSave = { id: exam.id, name: exam.name, responce };
-      const saved_count = await saveResultsToUsers(examForSave, new_students, students);
+      const saved_count = await saveResultsToUsers(
+        examForSave,
+        new_students,
+        students,
+      );
 
       return res.json({
         message: "Kalitlar yangilandi va barcha natijalar qayta hisoblandi",
@@ -320,22 +362,30 @@ export const stopRashmodule = async (req, res) => {
       return res.status(404).json({ message: "Exam topilmadi" });
     }
 
-    const requesterUserId = req.headers.user_id ?? req.headers["user-id"] ?? req.query.user_id;
+    const requesterUserId =
+      req.headers.user_id ?? req.headers["user-id"] ?? req.query.user_id;
     const CEO_USER_ID = "1849659907";
 
-    const isCreator = exam.createdByUserId && exam.createdByUserId === String(requesterUserId);
+    const isCreator =
+      exam.createdByUserId && exam.createdByUserId === String(requesterUserId);
     const isCeo = String(requesterUserId) === CEO_USER_ID;
 
     if (exam.createdByUserId && !requesterUserId) {
-      return res.status(400).json({ message: "Testni to'xtatish uchun user_id kerak" });
+      return res
+        .status(400)
+        .json({ message: "Testni to'xtatish uchun user_id kerak" });
     }
 
     if (exam.createdByUserId && !isCreator && !isCeo) {
-      return res.status(403).json({ message: "Bu testni faqat yaratgan odam yoki CEO to'xtata oladi" });
+      return res.status(403).json({
+        message: "Bu testni faqat yaratgan odam yoki CEO to'xtata oladi",
+      });
     }
 
     if (exam.status === "INACTIVE") {
-      return res.status(400).json({ message: "Bu imtihon allaqachon to'xtatilgan" });
+      return res
+        .status(400)
+        .json({ message: "Bu imtihon allaqachon to'xtatilgan" });
     }
 
     const responce = Array.isArray(exam.students) ? exam.students : [];
@@ -344,14 +394,19 @@ export const stopRashmodule = async (req, res) => {
       return res.status(400).json({ message: "Studentlar yo'q" });
     }
 
-    const { new_students, students_count } = calculateRash(responce, exam.responce);
+    const { new_students, students_count } = calculateRash(
+      responce,
+      exam.responce,
+    );
 
     if (students_count === 0) {
-      return res.status(400).json({ message: "Hech bir studentning javobi to'g'ri formatda emas" });
+      return res
+        .status(400)
+        .json({ message: "Hech bir studentning javobi to'g'ri formatda emas" });
     }
 
     const grade_stats = calcGradeStats(new_students);
- 
+
     // Bazaga saqlash
     const saved_count = await saveResultsToUsers(exam, new_students, responce);
 
@@ -380,4 +435,3 @@ export const stopRashmodule = async (req, res) => {
     res.status(500).json({ message: "Server error", error });
   }
 };
-
