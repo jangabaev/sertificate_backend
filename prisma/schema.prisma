@@ -42,5 +42,6 @@ model Test {
   type                TestType      @default(FREE)
   price               Int?
   userTest            String[]     
+  channelId           String?
 }
 

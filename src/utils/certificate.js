@@ -436,6 +436,7 @@ function drawFooter(doc) {
 
 export function generateCertificate({ student, examName, outputPath }) {
   const issuedAt = new Date();
+  console.log(student);
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({
       size: "A4",
@@ -475,10 +476,9 @@ export function generateCertificate({ student, examName, outputPath }) {
       "-";
 
     // Siz so'ragan mapping:
-    const familya =
-      student?.first_name || student?.firstName || student?.surname || "-";
+    const familya = student?.first_name || student?.firstName || "-";
 
-    const ism = student?.last_name || student?.lastName || "-";
+    const ism = student?.last_name || student?.lastName || student?.name || "-";
 
     const nickname = student?.nickname || student?.username || "-";
 
@@ -648,11 +648,6 @@ export function generateCertificate({ student, examName, outputPath }) {
       .stroke();
 
     doc.fillColor(NAVY).font("Helvetica").fontSize(9);
-
-    doc.text("Direktor imzosi", signatureX, y + 34, {
-      width: 130,
-      align: "center",
-    });
 
     // ==================================================
     // FOOTER

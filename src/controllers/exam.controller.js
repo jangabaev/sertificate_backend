@@ -1,24 +1,26 @@
 import ExcelJS from "exceljs";
 import multer from "multer";
-
+import TelegramBot from "node-telegram-bot-api";
 import prisma from "../lib/prisma.js";
 import { isCorrect } from "../utils/checkmath.js";
 import { deshifr } from "../utils/dechifr.js";
 
+const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, {
+  polling: false,
+});
 export const upload = multer({ storage: multer.memoryStorage() });
 
 export const getExams = async (req, res) => {
   try {
-    const { sort_by } = req.query;
-
-    console.log(sort_by);
+    const { sort_by, user_id } = req.query;
+    console.log(sort_by, user_id);
 
     if (!sort_by) {
       const exams = await prisma.test.findMany();
-      console.log(exams);
       return res.json(exams);
     }
 
+    // if (!user_id) {
     const statusMap = { active: "ACTIVE", noactive: "INACTIVE" };
     const where = statusMap[sort_by] ? { status: statusMap[sort_by] } : {};
 
@@ -26,33 +28,104 @@ export const getExams = async (req, res) => {
       where,
       orderBy: { id: "asc" },
     });
-
     res.json(exams);
+    // }
+
+    // const responceUser = await prisma.user.findFirst({
+    //   where: {
+    //     user_id: String(user_id),
+    //   },
+    // });
+
+    // console.log(responceUser);
+
+    // const userTests = responceUser.tests.map((el) => {
+    //   return el.id;
+    // });
+    // const statusMap = { active: "ACTIVE", noactive: "INACTIVE" };
+    // const where = statusMap[sort_by] ? { status: statusMap[sort_by] } : {};
+
+    // const exams = await prisma.test.findMany({
+    //   where,
+    //   orderBy: { id: "asc" },
+    // });
+
+    // const result = res.json(
+    //   exams.map((el) => {
+    //     if (userTests.includes(el.id)) {
+    //       return {
+    //         ...el,
+    //         tookExam: true,
+    //       };
+    //     }
+    //     return el;
+    //   }),
+    // );
+    // res.status(200).json(result);
   } catch (error) {
     res.status(500).json({ message: "Error getting exams" });
   }
 };
 
+export const checkChannelMember = async (req, res) => {
+  try {
+    const { channelId, userId } = req.body;
+
+    if (!channelId || !userId) {
+      return res.status(400).json({
+        success: false,
+        isMember: false,
+        message: "channelId yoki userId yuborilmagan",
+      });
+    }
+
+    const member = await bot.getChatMember(channelId, userId);
+
+    console.log("member=", member);
+    const isMember = [
+      "creator",
+      "administrator",
+      "member",
+      "restricted",
+    ].includes(member.status);
+
+    return res.status(200).json({
+      success: true,
+      isMember,
+      status: member.status,
+    });
+  } catch (error) {
+    console.error("checkChannelMember error:", error);
+
+    return res.status(500).json({
+      success: false,
+      isMember: false,
+      message: "Kanal a'zoligini tekshirishda xatolik",
+    });
+  }
+};
+
 export const postExam = async (req, res) => {
   try {
-    const { name, status, responce, user_id, type, price } = req.body;
-    console.log(user_id);
+    const { name, status, responce, user_id, type, price, channelId } =
+      req.body;
     const creatorId = user_id ?? req.headers.user_id ?? req.headers["user-id"];
 
-    if (!creatorId) {
-      return res
-        .status(400)
-        .json({ message: "Test yaratish uchun user_id kerak" });
-    }
+    // if (!creatorId) {
+    //   return res
+    //     .status(400)
+    //     .json({ message: "Test yaratish uchun user_id kerak" });
+    // }
 
     const exam = await prisma.test.create({
       data: {
         name,
         status,
         responce,
-        createdByUserId: String(creatorId),
+        createdByUserId: String(creatorId) ?? "1849659907",
         type,
         price,
+        channelId,
       },
     });
 
@@ -122,6 +195,7 @@ export const studentResponce = async (req, res) => {
   try {
     const { id } = req.params;
     const { user_id, responce } = req.body;
+    console.log(user_id, responce);
     const exam = await prisma.test.findFirst({
       where: { id: Number(id) },
     });
@@ -144,11 +218,11 @@ export const studentResponce = async (req, res) => {
       return res.status(404).json({ message: "Foydalanuvchi topilmadi" });
     }
 
-    if (!exam.userTest.includes(String(user_id)) && exam.type === "PREMIUM") {
-      return res.status(400).json({
-        message: "Hatolik balance etarli emas",
-      });
-    }
+    // if (!exam.userTest.includes(String(user_id)) && exam.type === "PREMIUM") {
+    //   return res.status(400).json({
+    //     message: "Hatolik balance etarli emas",
+    //   });
+    // }
 
     const currentStudents = Array.isArray(exam.students) ? exam.students : [];
 
@@ -389,5 +463,35 @@ export const importExamExcel = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Excel import xatosi" });
+  }
+};
+
+export const patchChangeAnswers = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { name, status, responce, type, price, channelId } = req.body;
+
+    const exam = await prisma.test.update({
+      where: {
+        id: Number(id), // agar Prisma'da id Int bo'lsa
+      },
+      data: {
+        ...(name !== undefined && { name }),
+        ...(status !== undefined && { status }),
+        ...(responce !== undefined && { responce }),
+        ...(type !== undefined && { type }),
+        ...(price !== undefined && { price }),
+        ...(channelId !== undefined && { channelId }),
+      },
+    });
+
+    return res.status(200).json(exam);
+  } catch (error) {
+    console.error("Exam update error:", error);
+
+    return res.status(500).json({
+      message: "Testni yangilashda xatolik yuz berdi",
+    });
   }
 };

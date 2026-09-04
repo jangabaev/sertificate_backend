@@ -8,18 +8,22 @@ import {
   importStudents,
   importExamExcel,
   upload,
-  buyTest
+  buyTest,
+  checkChannelMember,
+  patchChangeAnswers,
 } from "../controllers/exam.controller.js";
 
 const router = Router();
 
 router.post("/", postExam);
-router.get("/", getExams)
-router.patch("/:id", studentResponce)
-router.post("/:id/import", importStudents)
-router.post("/import-excel", upload.single("file"), importExamExcel)
-router.get("/:id/export", exportExamExcel)
-router.get("/:id", getExam)
-router.post("/buy",buyTest)
+router.get("/", getExams);
+router.patch("/:id", studentResponce);
+router.post("/:id/import", importStudents);
+router.post("/import-excel", upload.single("file"), importExamExcel);
+router.get("/:id/export", exportExamExcel);
+router.get("/:id", getExam);
+router.post("/buy", buyTest);
+router.post("/checkMember", checkChannelMember);
+router.patch("/change/:id", patchChangeAnswers);
 
-export default router
+export default router;

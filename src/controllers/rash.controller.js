@@ -132,7 +132,7 @@ function calculateRash(responce, trueAnswer) {
     let total_ball = Math.floor((50 + z_coficent * 10) * 100) / 100;
 
     if (total_ball > 90) {
-      total_ball = 90 + (total_ball - 90) * 0.1;
+      total_ball = 90 + (total_ball - 90) * 0.03;
     }
 
     total_ball = Math.floor(total_ball * 100) / 100;
@@ -411,7 +411,12 @@ export const stopRashmodule = async (req, res) => {
     const saved_count = await saveResultsToUsers(exam, new_students, responce);
 
     // Telegram sertifikatlar yuborish
-    const delivery = await sendCertificatesToStudents(exam, new_students);
+
+    //comment now for stopped seng exam
+    // const delivery = await sendCertificatesToStudents(exam, new_students);
+
+    console.log(exam);
+    // console.log(new_students);
 
     const rashData = {
       students_count,
@@ -419,7 +424,7 @@ export const stopRashmodule = async (req, res) => {
       new_students,
       sent_to_students: true,
       sent_at: new Date().toISOString(),
-      delivery: { ...delivery, saved_count },
+      // delivery: { ...delivery, saved_count },
     };
 
     await prisma.test.update({
@@ -431,6 +436,20 @@ export const stopRashmodule = async (req, res) => {
     });
 
     res.status(200).json(rashData);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
+export const sendSertificateAndMessage = async (req, res) => {
+  try {
+    const { examId } = req.params;
+    const exam = await prisma.test.findFirst({ where: { id: Number(examId) } });
+    if (!exam || !exam.rash?.new_students) {
+      return res.status(404).json({ message: "Exam topilmadi" });
+    }
+    delivery = await sendCertificatesToStudents(exam, exam.rash.new_students);
+    res.status(200).json("jaqsi");
   } catch (error) {
     res.status(500).json({ message: "Server error", error });
   }
