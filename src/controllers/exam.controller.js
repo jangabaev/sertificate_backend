@@ -70,6 +70,9 @@ export const checkChannelMember = async (req, res) => {
   try {
     const { channelId, userId } = req.body;
 
+    console.log("channelId=", channelId);
+    console.log("user_id=", userId);
+
     if (!channelId || !userId) {
       return res.status(400).json({
         success: false,
