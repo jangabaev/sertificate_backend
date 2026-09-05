@@ -369,7 +369,7 @@ export const stopRashmodule = async (req, res) => {
     console.log("=== POST EXAM ===");
     console.log("examId:", examId);
     console.log("requesterUserId:", requesterUserId);
-    console.log(exam);
+    // console.log(exam);
     const isCreator =
       exam.createdByUserId && exam.createdByUserId === String(requesterUserId);
     const isCeo = String(requesterUserId) === CEO_USER_ID;
