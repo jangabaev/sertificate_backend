@@ -279,11 +279,11 @@ function drawPersonRow(doc, label, value, y) {
   const colonX = 245;
   const valueX = 270;
 
-  doc.fillColor(NAVY).font("Helvetica").fontSize(11);
+  doc.fillColor(NAVY).font("Noto").fontSize(11);
 
   doc.text(label, labelX, y);
 
-  doc.fillColor(NAVY).font("Helvetica-Bold").text(":", colonX, y);
+  doc.fillColor(NAVY).font("Noto-Bold").text(":", colonX, y);
 
   doc
     .fillColor(DARK)
@@ -365,7 +365,7 @@ function drawMedal(doc, centerX, centerY) {
   // star-ish symbol
   doc.fillColor(GOLD).font("Helvetica-Bold").fontSize(22);
 
-  doc.text("★", centerX - 12, centerY - 13, {
+  doc.text("", centerX - 12, centerY - 13, {
     width: 24,
     align: "center",
   });
@@ -411,12 +411,12 @@ function drawFooter(doc) {
 
   doc.fillColor(GOLD).font("Helvetica-Bold").fontSize(11);
 
-  doc.text("❧", x + 12, y + 10);
+  doc.text("", x + 12, y + 10);
 
   doc.fillColor(WHITE).font("Helvetica").fontSize(7.4);
 
   doc.text(
-    "Mazkur sertifikat Rasch Item Response Theory (IRT) adaptive baholash metodi asosida avtomatik yaratilgan.",
+    "Mazkur sertifikat Rash baholash modeliga asosida avtomatik yaratilgan.",
     x + 32,
     y + 10,
     {
@@ -427,7 +427,7 @@ function drawFooter(doc) {
 
   doc.fillColor(GOLD).font("Helvetica-Bold").fontSize(11);
 
-  doc.text("❧", x + width - 24, y + 10);
+  doc.text("", x + width - 24, y + 10);
 }
 
 // ======================================================
@@ -452,6 +452,9 @@ export function generateCertificate({ student, examName, outputPath }) {
         Subject: "Rasch IRT Certificate",
       },
     });
+
+    doc.registerFont("Noto", "../assets/NotoSans-Regular.ttf");
+    doc.registerFont("Noto-Bold", "../assets/NotoSans-Bold.ttf");
 
     const stream = fs.createWriteStream(outputPath);
 
@@ -516,13 +519,13 @@ export function generateCertificate({ student, examName, outputPath }) {
 
     doc.fillColor(NAVY).font("Helvetica").fontSize(12);
 
-    centerText(doc, "Online mock testimizda o'tkazilgan", y);
+    centerText(doc, "O'tkazilgan online mock testimizda", y);
 
     y += 22;
 
     doc.font("Helvetica-Bold").fontSize(13);
 
-    centerText(doc, "ONLINE OLIMPIADA NATIJASIGA ASOSAN", y);
+    centerText(doc, "ONLINE Mock test natiyjasiga asoslanib", y);
 
     y += 33;
 
@@ -540,7 +543,7 @@ export function generateCertificate({ student, examName, outputPath }) {
 
     y += 33;
 
-    centerText(doc, "SIZNING BILIM DARAJASI SERTIFIKATI", y);
+    centerText(doc, "SIZNING BILIM DARAJANGIZ", y);
 
     y += 43;
 
