@@ -70,6 +70,8 @@ export const getTestPending = async (req, res) => {
   try {
     const { id } = req.params;
 
+    console.log(id);
+
     const exam = await prisma.test.update({
       where: {
         id: Number(id), // agar Prisma'da id Int bo'lsa
@@ -78,6 +80,8 @@ export const getTestPending = async (req, res) => {
         status: "PENDING",
       },
     });
+
+    console.log(exam);
 
     return res.status(200).json(exam);
   } catch (error) {
