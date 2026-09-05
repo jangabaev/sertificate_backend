@@ -14,6 +14,7 @@ export const getExams = async (req, res) => {
   try {
     const { sort_by, user_id } = req.query;
 
+    // sort_by yo'q bo'lsa — hamma testlar
     if (!sort_by) {
       const exams = await prisma.test.findMany({
         orderBy: {
@@ -21,15 +22,26 @@ export const getExams = async (req, res) => {
         },
       });
 
-      return res.json(exams);
+      return res.status(200).json(exams);
     }
 
-    const statusMap = {
-      active: "ACTIVE",
-      noactive: "INACTIVE",
-    };
+    let where = {};
 
-    const where = statusMap[sort_by] ? { status: statusMap[sort_by] } : {};
+    // ACTIVE so'ralganda ACTIVE + PENDING
+    if (sort_by === "active") {
+      where = {
+        status: {
+          in: ["ACTIVE", "PENDING"],
+        },
+      };
+    }
+
+    // INACTIVE
+    if (sort_by === "noactive") {
+      where = {
+        status: "INACTIVE",
+      };
+    }
 
     const exams = await prisma.test.findMany({
       where,
@@ -38,9 +50,9 @@ export const getExams = async (req, res) => {
       },
     });
 
-    return res.json(exams);
+    return res.status(200).json(exams);
   } catch (error) {
-    console.error(error);
+    console.error("Get exams error:", error);
 
     return res.status(500).json({
       message: "Error getting exams",
