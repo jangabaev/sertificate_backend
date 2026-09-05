@@ -450,8 +450,7 @@ export const sendSertificateAndMessage = async (req, res) => {
     const { examId } = req.params;
 
     const exam = await prisma.test.findFirst({ where: { id: Number(examId) } });
-    console.log(exam);
-    console.log("examId", examId);
+
     if (!exam || !exam.rash?.new_students) {
       return res.status(404).json({ message: "Exam topilmadi" });
     }

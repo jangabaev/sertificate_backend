@@ -279,11 +279,11 @@ function drawPersonRow(doc, label, value, y) {
   const colonX = 245;
   const valueX = 270;
 
-  doc.fillColor(NAVY).font("Noto").fontSize(11);
+  doc.fillColor(NAVY).font("Helvetica").fontSize(11);
 
   doc.text(label, labelX, y);
 
-  doc.fillColor(NAVY).font("Noto-Bold").text(":", colonX, y);
+  doc.fillColor(NAVY).font("Helvetica-Bold").text(":", colonX, y);
 
   doc
     .fillColor(DARK)
@@ -453,8 +453,8 @@ export function generateCertificate({ student, examName, outputPath }) {
       },
     });
 
-    doc.registerFont("Noto", "../assets/NotoSans-Regular.ttf");
-    doc.registerFont("Noto-Bold", "../assets/NotoSans-Bold.ttf");
+    // doc.registerFont("Noto", "../assets/NotoSans-Regular.ttf");
+    // doc.registerFont("Noto-Bold", "../assets/NotoSans-Bold.ttf");
 
     const stream = fs.createWriteStream(outputPath);
 
