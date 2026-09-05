@@ -15,54 +15,36 @@ export const getExams = async (req, res) => {
     const { sort_by, user_id } = req.query;
 
     if (!sort_by) {
-      const exams = await prisma.test.findMany();
+      const exams = await prisma.test.findMany({
+        orderBy: {
+          id: "desc",
+        },
+      });
+
       return res.json(exams);
     }
 
-    // if (!user_id) {
-    const statusMap = { active: "ACTIVE", noactive: "INACTIVE" };
+    const statusMap = {
+      active: "ACTIVE",
+      noactive: "INACTIVE",
+    };
+
     const where = statusMap[sort_by] ? { status: statusMap[sort_by] } : {};
 
     const exams = await prisma.test.findMany({
       where,
-      orderBy: { id: "asc" },
+      orderBy: {
+        id: "desc",
+      },
     });
-    res.json(exams);
-    // }
 
-    // const responceUser = await prisma.user.findFirst({
-    //   where: {
-    //     user_id: String(user_id),
-    //   },
-    // });
-
-    // console.log(responceUser);
-
-    // const userTests = responceUser.tests.map((el) => {
-    //   return el.id;
-    // });
-    // const statusMap = { active: "ACTIVE", noactive: "INACTIVE" };
-    // const where = statusMap[sort_by] ? { status: statusMap[sort_by] } : {};
-
-    // const exams = await prisma.test.findMany({
-    //   where,
-    //   orderBy: { id: "asc" },
-    // });
-
-    // const result = res.json(
-    //   exams.map((el) => {
-    //     if (userTests.includes(el.id)) {
-    //       return {
-    //         ...el,
-    //         tookExam: true,
-    //       };
-    //     }
-    //     return el;
-    //   }),
-    // );
-    // res.status(200).json(result);
+    return res.json(exams);
   } catch (error) {
-    res.status(500).json({ message: "Error getting exams" });
+    console.error(error);
+
+    return res.status(500).json({
+      message: "Error getting exams",
+    });
   }
 };
 
