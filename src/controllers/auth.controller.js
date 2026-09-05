@@ -48,13 +48,13 @@ export const getUsers = async (req, res) => {
 
 export const getUserbyId = async (req, res) => {
   try {
-    const user_id = req.headers.token;
+    const header = req.headers.token;
     if (!header) {
       return res.status(400).json({ message: "No token provided" });
     }
     const responce = await prisma.user.findFirst({
       where: {
-        user_id: String(user_id),
+        user_id: String(header),
       },
     });
     res.json(responce);
