@@ -13,7 +13,6 @@ export const upload = multer({ storage: multer.memoryStorage() });
 export const getExams = async (req, res) => {
   try {
     const { sort_by, user_id } = req.query;
-    console.log(sort_by, user_id);
 
     if (!sort_by) {
       const exams = await prisma.test.findMany();

@@ -366,6 +366,10 @@ export const stopRashmodule = async (req, res) => {
       req.headers.user_id ?? req.headers["user-id"] ?? req.query.user_id;
     const CEO_USER_ID = "1849659907";
 
+    console.log("=== POST EXAM ===");
+    console.log("examId:", examId);
+    console.log("requesterUserId:", requesterUserId);
+    console.log(exam);
     const isCreator =
       exam.createdByUserId && exam.createdByUserId === String(requesterUserId);
     const isCeo = String(requesterUserId) === CEO_USER_ID;
@@ -376,7 +380,7 @@ export const stopRashmodule = async (req, res) => {
         .json({ message: "Testni to'xtatish uchun user_id kerak" });
     }
 
-    if (exam.createdByUserId && !isCreator && !isCeo) {
+    if (exam.createdByUserId && (!isCreator || !isCeo)) {
       return res.status(403).json({
         message: "Bu testni faqat yaratgan odam yoki CEO to'xtata oladi",
       });
