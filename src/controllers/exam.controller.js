@@ -66,6 +66,29 @@ export const getExams = async (req, res) => {
   }
 };
 
+export const getTestPending = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const exam = await prisma.test.update({
+      where: {
+        id: Number(id), // agar Prisma'da id Int bo'lsa
+      },
+      data: {
+        status: "PENDING",
+      },
+    });
+
+    return res.status(200).json(exam);
+  } catch (error) {
+    console.error("Exam update error:", error);
+
+    return res.status(500).json({
+      message: "Testni yangilashda xatolik yuz berdi",
+    });
+  }
+};
+
 export const checkChannelMember = async (req, res) => {
   try {
     const { channelId, userId } = req.body;
@@ -197,13 +220,17 @@ export const studentResponce = async (req, res) => {
   try {
     const { id } = req.params;
     const { user_id, responce } = req.body;
-    console.log(user_id, responce);
+
     const exam = await prisma.test.findFirst({
       where: { id: Number(id) },
     });
 
     if (!exam) {
       return res.status(404).json({ message: "Exam not found" });
+    }
+
+    if (exam.status === "PENDING") {
+      return res.status(400).json({ message: "Bu imtihon Vati Tugagan" });
     }
 
     if (exam.status === "INACTIVE") {

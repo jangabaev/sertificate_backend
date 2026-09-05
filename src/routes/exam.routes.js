@@ -11,6 +11,7 @@ import {
   buyTest,
   checkChannelMember,
   patchChangeAnswers,
+  getTestPending,
 } from "../controllers/exam.controller.js";
 
 const router = Router();
@@ -25,5 +26,6 @@ router.get("/:id", getExam);
 router.post("/buy", buyTest);
 router.post("/checkMember", checkChannelMember);
 router.patch("/change/:id", patchChangeAnswers);
+router.get("/pennding/:id", getTestPending);
 
 export default router;
