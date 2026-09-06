@@ -380,7 +380,7 @@ export const stopRashmodule = async (req, res) => {
         .json({ message: "Testni to'xtatish uchun user_id kerak" });
     }
 
-    if (exam.createdByUserId && (!isCreator || !isCeo)) {
+    if (exam.createdByUserId && !isCreator && !isCeo) {
       return res.status(403).json({
         message: "Bu testni faqat yaratgan odam yoki CEO to'xtata oladi",
       });
