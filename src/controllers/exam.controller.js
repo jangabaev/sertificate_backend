@@ -522,3 +522,68 @@ export const patchChangeAnswers = async (req, res) => {
     });
   }
 };
+
+
+export const deleteExam = async (req, res) => {
+  try {
+    const { examId } = req.params;
+
+    const token = req.headers.token;
+
+    if (!token) {
+      return res.status(401).json({
+        message: "Token topilmadi",
+      });
+    }
+
+    const requesterUserId = deshifr(token);
+
+    if (!requesterUserId) {
+      return res.status(401).json({
+        message: "Token noto'g'ri",
+      });
+    }
+
+    const exam = await prisma.test.findUnique({
+      where: {
+        id: Number(examId),
+      },
+    });
+
+    if (!exam) {
+      return res.status(404).json({
+        message: "Test topilmadi",
+      });
+    }
+
+    const CEO_USER_ID = process.env.CEO_USER_ID;
+
+    const isCreator =
+      String(exam.createdByUserId) === String(requesterUserId);
+
+    const isCeo =
+      String(requesterUserId) === String(CEO_USER_ID);
+
+    if (!isCreator && !isCeo) {
+      return res.status(403).json({
+        message: "Bu testni o'chirishga ruxsatingiz yo'q",
+      });
+    }
+
+    await prisma.test.delete({
+      where: {
+        id: Number(examId),
+      },
+    });
+
+    return res.status(200).json({
+      message: "Test muvaffaqiyatli o'chirildi",
+    });
+  } catch (error) {
+    console.error("DELETE EXAM ERROR:", error);
+
+    return res.status(500).json({
+      message: "Testni o'chirishda xatolik",
+    });
+  }
+};

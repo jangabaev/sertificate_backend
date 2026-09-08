@@ -12,6 +12,7 @@ import {
   checkChannelMember,
   patchChangeAnswers,
   getTestPending,
+  deleteExam,
 } from "../controllers/exam.controller.js";
 
 const router = Router();
@@ -27,5 +28,6 @@ router.post("/buy", buyTest);
 router.post("/checkMember", checkChannelMember);
 router.patch("/change/:id", patchChangeAnswers);
 router.get("/pennding/:id", getTestPending);
+router.delete("/:examId", deleteExam);
 
 export default router;
