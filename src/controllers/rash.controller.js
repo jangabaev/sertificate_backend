@@ -10,8 +10,8 @@ const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, {
 function getDegree(totalBall) {
   if (totalBall >= 70) return "A+";
   if (totalBall >= 65) return "A";
-  if (totalBall >= 60) return "B";
-  if (totalBall >= 55) return "B+";
+  if (totalBall >= 60) return "B+";
+  if (totalBall >= 55) return "B";
   if (totalBall >= 50) return "C+";
   if (totalBall >= 46) return "C";
   return "NC";

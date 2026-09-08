@@ -523,7 +523,6 @@ export const patchChangeAnswers = async (req, res) => {
   }
 };
 
-
 export const deleteExam = async (req, res) => {
   try {
     const { examId } = req.params;
@@ -558,11 +557,9 @@ export const deleteExam = async (req, res) => {
 
     const CEO_USER_ID = process.env.CEO_USER_ID;
 
-    const isCreator =
-      String(exam.createdByUserId) === String(requesterUserId);
+    const isCreator = String(exam.createdByUserId) === String(requesterUserId);
 
-    const isCeo =
-      String(requesterUserId) === String(CEO_USER_ID);
+    const isCeo = String(requesterUserId) === String(CEO_USER_ID);
 
     if (!isCreator && !isCeo) {
       return res.status(403).json({
