@@ -2,7 +2,7 @@ import { Prisma } from "@prisma/client";
 import prisma from "../lib/prisma.js";
 import { deshifr } from "../utils/dechifr.js";
 
-export const createUser = async (req, res) => {
+export const createUser = async (req, res) => { 
   try {
     const { user_id, username, first_name, last_name } = req.body;
 
@@ -11,6 +11,7 @@ export const createUser = async (req, res) => {
     const existing = await prisma.user.findFirst({
       where: { user_id: strUserId },
     });
+
     if (existing) {
       return res.status(409).json({ message: "User already exists" });
     }
