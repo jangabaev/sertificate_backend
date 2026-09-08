@@ -134,11 +134,11 @@ export const postExam = async (req, res) => {
       req.body;
     const creatorId = user_id ?? req.headers.user_id ?? req.headers["user-id"];
 
-    // if (!creatorId) {
-    //   return res
-    //     .status(400)
-    //     .json({ message: "Test yaratish uchun user_id kerak" });
-    // }
+    if (!creatorId) {
+      return res
+        .status(400)
+        .json({ message: "Test yaratish uchun user_id kerak" });
+    }
 
     const exam = await prisma.test.create({
       data: {
