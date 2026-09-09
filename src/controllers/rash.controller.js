@@ -18,7 +18,7 @@ function getDegree(totalBall) {
 }
 
 function calcGradeStats(students) {
-  const stats = { "A+": 0, A: 0, B: 0, "B+": 0, "C+": 0, C: 0, NC: 0 };
+  const stats = { "A+": 0, A: 0, "B+": 0, B: 0, "C+": 0, C: 0, NC: 0 };
   students.forEach((s) => {
     const g = getDegree(s.total_ball);
     stats[g]++;
