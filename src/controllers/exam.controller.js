@@ -106,8 +106,8 @@ export const checkChannelMember = async (req, res) => {
   try {
     const { channelId, userId } = req.body;
 
-    console.log("channelId=", channelId);
-    console.log("user_id=", userId);
+    console.log("channelId =", channelId);
+    console.log("userId =", userId);
 
     if (!channelId || !userId) {
       return res.status(400).json({
@@ -117,20 +117,56 @@ export const checkChannelMember = async (req, res) => {
       });
     }
 
-    const member = await bot.getChatMember(channelId, userId);
+    const CHANNELS = [
+      channelId, // asosiy kanal
+      "-1003722907958", // ms3
+      "-1003923825017", // ms4
+      "-1003968513581", // ms5
+    ];
 
-    console.log("member=", member);
-    const isMember = [
+    const results = await Promise.allSettled(
+      CHANNELS.map((id) => bot.getChatMember(id, userId)),
+    );
+
+    const MEMBER_STATUSES = [
       "creator",
       "administrator",
       "member",
       "restricted",
-    ].includes(member.status);
+    ];
+
+    const checkedChannels = results.map((result, index) => {
+      if (result.status === "fulfilled") {
+        const member = result.value;
+
+        return {
+          channelId: CHANNELS[index],
+          status: member.status,
+          isMember: MEMBER_STATUSES.includes(member.status),
+        };
+      }
+
+      console.error(
+        `Channel ${CHANNELS[index]} tekshirishda xato:`,
+        result.reason,
+      );
+
+      return {
+        channelId: CHANNELS[index],
+        status: "error",
+        isMember: false,
+      };
+    });
+
+    // 4 ta kanaldan bittasida bo'lsa ham true
+    const isMember = checkedChannels.some(
+      (channel) => channel.isMember === true,
+    );
 
     return res.status(200).json({
       success: true,
       isMember,
-      status: member.status,
+      channels: checkedChannels,
     });
   } catch (error) {
     console.error("checkChannelMember error:", error);
