@@ -384,73 +384,161 @@ export const importStudents = async (req, res) => {
 export const exportExamExcel = async (req, res) => {
   try {
     const { id } = req.params;
-    const exam = await prisma.test.findFirst({ where: { id: Number(id) } });
 
-    if (!exam) return res.status(404).json({ message: "Exam not found" });
+    const exam = await prisma.test.findFirst({
+      where: { id: Number(id) },
+    });
+
+    if (!exam) {
+      return res.status(404).json({
+        message: "Exam not found",
+      });
+    }
 
     const correctAnswers = Array.isArray(exam.responce) ? exam.responce : [];
+
     const students = Array.isArray(exam.students) ? exam.students : [];
-    const questionCount = correctAnswers.length;
 
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("Natijalar");
 
-    // Header row
+    // =========================
+    // HEADER
+    // =========================
     sheet.columns = [
-      { header: "Ism Familya", key: "name", width: 25 },
+      {
+        header: "Ism Familya",
+        key: "name",
+        width: 25,
+      },
+
       ...correctAnswers.map((_, i) => ({
         header: String(i + 1),
         key: `q${i}`,
-        width: 5,
+        width: 8,
       })),
-      { header: "Jami", key: "total", width: 8 },
+
+      {
+        header: "Jami",
+        key: "total",
+        width: 8,
+      },
     ];
 
-    // Style header
-    sheet.getRow(1).font = { bold: true };
-    sheet.getRow(1).alignment = { horizontal: "center" };
+    sheet.getRow(1).font = {
+      bold: true,
+    };
 
+    sheet.getRow(1).alignment = {
+      horizontal: "center",
+      vertical: "middle",
+    };
+
+    // =========================
+    // STUDENTS
+    // =========================
     for (const student of students) {
       const answers = Array.isArray(student.responce) ? student.responce : [];
 
-      let scores;
-      if (student.imported) {
-        // Import qilingan talabalar: responce allaqachon 0/1 formatida
-        scores = answers.map((a) => (Number(a) === 1 ? 1 : 0));
-      } else {
-        // Telegram foydalanuvchilar: haqiqiy javoblarni to'g'ri javob bilan solishtir
+      /*
+        Telegram user:
+        user_id: "1849659907"
+
+        Import user:
+        user_id: "import:test1.xlsx:1723456789"
+      */
+
+      const userId = String(student.user_id ?? "");
+
+      const isImported = userId.startsWith("import:");
+
+      let scores = [];
+
+      // =========================
+      // IMPORT QILINGAN STUDENT
+      // =========================
+      if (isImported) {
+        /*
+          Import qilingan student responce:
+
+          [1, 0, 1, 1, 0]
+
+          1 = to'g'ri
+          0 = xato
+        */
+
+        scores = correctAnswers.map((_, i) => {
+          return Number(answers[i]) === 1 ? 1 : 0;
+        });
+      }
+
+      // =========================
+      // TELEGRAM STUDENT
+      // =========================
+      else {
         scores = correctAnswers.map((correct, i) => {
-          const ans = answers[i];
-          const isRight =
-            i > 35
-              ? isCorrect(ans, correct)
-              : ans?.toLocaleLowerCase() === correct?.toLocaleLowerCase();
+          const answer = answers[i];
+
+          if (answer === undefined || answer === null) {
+            return 0;
+          }
+
+          let isRight = false;
+
+          // 36-savoldan keyin matematik javoblarni
+          // isCorrect orqali tekshirish
+          if (i > 35) {
+            isRight = isCorrect(answer, correct);
+          } else {
+            // Oddiy text javob
+            isRight =
+              String(answer).trim().toLocaleLowerCase() ===
+              String(correct).trim().toLocaleLowerCase();
+          }
+
           return isRight ? 1 : 0;
         });
       }
 
-      const total = scores.reduce((a, b) => a + b, 0);
-      const row = { name: student.name };
-      scores.forEach((s, i) => {
-        row[`q${i}`] = s === 1 ? "to'g'ri" : "xato";
+      // =========================
+      // JAMI BALL
+      // =========================
+      const total = scores.reduce((sum, score) => sum + score, 0);
+
+      const row = {
+        name: student.name ?? "",
+        total,
+      };
+
+      scores.forEach((score, i) => {
+        row[`q${i}`] = score === 1 ? "to'g'ri" : "xato";
       });
-      row.total = total;
+
       sheet.addRow(row);
     }
 
+    // =========================
+    // EXCEL RESPONSE
+    // =========================
     res.setHeader(
       "Content-Type",
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     );
+
     res.setHeader(
       "Content-Disposition",
       `attachment; filename=exam_${id}.xlsx`,
     );
+
     await workbook.xlsx.write(res);
+
     res.end();
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Excel yaratishda xato" });
+    console.error("exportExamExcel error:", error);
+
+    return res.status(500).json({
+      message: "Excel yaratishda xato",
+    });
   }
 };
 
