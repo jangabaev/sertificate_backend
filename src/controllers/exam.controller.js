@@ -12,18 +12,66 @@ export const upload = multer({ storage: multer.memoryStorage() });
 
 export const getExams = async (req, res) => {
   try {
-    const { sort_by, user_id } = req.query;
+    const { sort_by } = req.query;
+    const header = req.headers.token;
 
-    if (!sort_by) {
+    if (!header) {
+      if (!sort_by) {
+        const exams = await prisma.test.findMany({
+          orderBy: {
+            id: "desc",
+          },
+        });
+
+        return res.status(200).json(exams);
+      }
+
+      let where = {};
+
+      if (sort_by === "active") {
+        where = {
+          status: {
+            in: ["ACTIVE", "PENDING"],
+          },
+        };
+      }
+
+      if (sort_by === "noactive") {
+        where = {
+          status: "INACTIVE",
+        };
+      }
+
       const exams = await prisma.test.findMany({
+        where,
+        select: {
+          id: true,
+          name: true,
+          status: true,
+          createdAt: true,
+          type: true,
+          price: true,
+          channelId: true,
+          students: true,
+        },
         orderBy: {
           id: "desc",
         },
       });
+      const result = exams.map((exam) => {
+        const { students, ...rest } = exam;
 
-      return res.status(200).json(exams);
+        return {
+          ...rest,
+          studentCount: Array.isArray(students) ? students.length : 0,
+          isMemberSubmid: false,
+        };
+      });
+
+      return res.status(200).json(result);
     }
 
+    const user_id = deshifr(header);
     let where = {};
 
     if (sort_by === "active") {
@@ -56,12 +104,19 @@ export const getExams = async (req, res) => {
         id: "desc",
       },
     });
+
     const result = exams.map((exam) => {
       const { students, ...rest } = exam;
+
+      const isMemberSubmid = user_id
+        ? Array.isArray(students) &&
+          students.some((student) => String(student.id) === String(user_id))
+        : false;
 
       return {
         ...rest,
         studentCount: Array.isArray(students) ? students.length : 0,
+        isMemberSubmid,
       };
     });
 

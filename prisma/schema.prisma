@@ -44,4 +44,3 @@ model Test {
   userTest            String[]     
   channelId           String?
 }
-

@@ -2,6 +2,11 @@ import prisma from "../lib/prisma.js";
 import TelegramBot from "node-telegram-bot-api";
 import { generatePDF } from "../utils/generatepdf.js";
 import { isCorrect } from "../utils/checkmath.js";
+import {
+  createJob,
+  getJob,
+  processCertificateQueue,
+} from "../services/certificate.queue.js";
 
 const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, {
   polling: false,
@@ -32,28 +37,154 @@ function getJsonObject(value) {
     : {};
 }
 
+const GEOMETRY_INDEXES = [
+  22, 24, 25, 26, 27, 28, 29, 32, 33, 34, 45, 46, 47, 48, 49, 50, 51, 52, 53,
+  54,
+];
+
+const ALGEBRA_INDEXES = Array.from({ length: 55 }, (_, i) => i).filter(
+  (i) => !GEOMETRY_INDEXES.includes(i),
+);
+
+function calculateSectionRash(students, indexes) {
+  const students_count = students.length;
+
+  if (students_count === 0 || indexes.length === 0) {
+    return new Map();
+  }
+
+  // Faqat shu section savollari bo'yicha to'g'ri javoblar soni
+  const currect_answers = new Array(indexes.length).fill(0);
+
+  const sectionStudents = students.map((student) => {
+    const test = indexes.map((originalIndex, sectionIndex) => {
+      const value = student.test[originalIndex] ?? 0;
+
+      currect_answers[sectionIndex] += value;
+
+      return value;
+    });
+
+    return {
+      user_id: student.user_id,
+      test,
+    };
+  });
+
+  // Har bir savolning qiyinlik koeffitsienti
+  const possiblity = currect_answers.map((correctCount) => {
+    const p = correctCount / students_count;
+
+    if (p === 0 || p === 1) {
+      return 4 * (1 - p);
+    }
+
+    return -Math.log(p / (1 - p));
+  });
+
+  const min = Math.min(...possiblity);
+
+  let summa_ball = 0;
+
+  const balls = possiblity.map((poss) => {
+    const ball = min * -1 + poss + 1;
+
+    summa_ball += ball;
+
+    return ball;
+  });
+
+  // Har bir studentning section bo'yicha currect / incorect / skill
+  const sectionResults = sectionStudents.map((student) => {
+    let currect = student.test.reduce(
+      (acc, isCorrect, index) => acc + isCorrect * balls[index],
+      0,
+    );
+
+    currect = currect === 0 ? 1 : currect;
+
+    const incorect = summa_ball - currect !== 0 ? summa_ball - currect : 1;
+
+    const skill = Math.log(currect / incorect);
+
+    return {
+      user_id: student.user_id,
+      currect,
+      incorect,
+      skill,
+    };
+  });
+
+  // Mean
+  const skil_calculateMean =
+    sectionResults.reduce((acc, student) => acc + student.skill, 0) /
+    students_count;
+
+  // Root
+  const skil_root = Math.sqrt(
+    sectionResults.reduce(
+      (acc, student) => acc + (student.skill - skil_calculateMean) ** 2,
+      0,
+    ) / students_count,
+  );
+
+  // Final Rash ball
+  const results = new Map();
+
+  sectionResults.forEach((student) => {
+    const z_coficent =
+      skil_root > 0 ? (student.skill - skil_calculateMean) / skil_root : 0;
+
+    let total_ball = Math.floor((50 + z_coficent * 10) * 100) / 100;
+
+    if (total_ball > 87) {
+      total_ball = 87 + (total_ball - 87) * 0.07;
+    }
+
+    if (total_ball < 25) {
+      total_ball = 25 - total_ball * 0.01;
+    }
+
+    total_ball = Math.floor(total_ball * 100) / 100;
+
+    if (!isFinite(total_ball) || isNaN(total_ball)) {
+      total_ball = 50;
+    }
+
+    results.set(student.user_id, {
+      total_ball,
+    });
+  });
+
+  return results;
+}
+
 function calculateRash(responce, trueAnswer) {
   const validResponce = responce.filter((el) => {
-    if (!Array.isArray(el.responce) || el.responce.length === 0) {
-      return false;
-    }
-    return true;
+    return Array.isArray(el.responce) && el.responce.length > 0;
   });
 
   if (validResponce.length === 0) {
-    return { new_students: [], students_count: 0 };
+    return {
+      new_students: [],
+      students_count: 0,
+    };
   }
 
   const students_count = validResponce.length;
 
-  let new_students = [];
-  let currect_answers = new Array(trueAnswer.length).fill(0);
+  // ============================================================
+  // 1. AVVAL barcha studentlarning 55 ta javobini 0/1 ga aylantiramiz
+  // ============================================================
 
-  validResponce.forEach((el) => {
+  const students = validResponce.map((el) => {
     const testTrueFalse = [];
+
     el.responce.forEach((ans, index) => {
       if (index >= trueAnswer.length) return;
+
       let correct;
+
       if (el.imported) {
         const value = Number(ans);
 
@@ -73,82 +204,63 @@ function calculateRash(responce, trueAnswer) {
           ? 1
           : 0;
       }
-      currect_answers[index] += correct;
+
       testTrueFalse.push(correct);
     });
 
-    const totalCorrect = testTrueFalse.reduce((a, b) => a + b, 0);
-
-    if (totalCorrect === 0 && testTrueFalse.length > 0) {
-      testTrueFalse[0] = 1;
-      currect_answers[0] += 1;
-    } else if (totalCorrect === trueAnswer.length && testTrueFalse.length > 0) {
-      testTrueFalse[0] = 0;
-      currect_answers[0] -= 1;
-    }
-
-    new_students.push({
+    return {
       user_id: el.id,
       name: el.name,
       test: testTrueFalse,
       imported: el.imported ?? false,
-    });
+    };
   });
 
-  const possiblity = currect_answers.map((el) => {
-    const p = el / students_count;
-    if (p === 0 || p === 1) return 4 * (1 - p);
-    return -Math.log(p / (1 - p));
-  });
-  const min = Math.min(...possiblity);
-  let summa_ball = 0;
-  const balls = possiblity.map((poss) => {
-    const b = min * -1 + poss + 1;
-    summa_ball += b;
-    return b;
-  });
+  // ============================================================
+  // 2. GEOMETRY va ALGEBRA uchun alohida Rash
+  // ============================================================
 
-  let skills_array = [];
-  new_students = new_students.map((el) => {
-    let currect = el.test.reduce((acc, isC, idx) => acc + isC * balls[idx], 0);
-    currect = currect === 0 ? 1 : currect;
-    const incorect = summa_ball - currect !== 0 ? summa_ball - currect : 1;
-    const skill = Math.log(currect / incorect);
-    skills_array.push(skill);
-    return { ...el, incorect, currect, skill };
-  });
+  const algebraRash = calculateSectionRash(students, ALGEBRA_INDEXES);
 
-  const skil_calculateMean =
-    skills_array.reduce((acc, v) => acc + v, 0) / students_count;
+  const geometriyaRash = calculateSectionRash(students, GEOMETRY_INDEXES);
 
-  const skil_root = Math.sqrt(
-    skills_array.reduce((acc, v) => acc + (v - skil_calculateMean) ** 2, 0) /
-      students_count,
-  );
+  // ============================================================
+  // 3. Natijalarni studentlarga biriktiramiz
+  // ============================================================
 
-  new_students = new_students.map((el) => {
-    const z_coficent =
-      skil_root > 0 ? (el.skill - skil_calculateMean) / skil_root : 0;
-    let total_ball = Math.floor((50 + z_coficent * 10) * 100) / 100;
+  const new_students = students.map((student) => {
+    const algebraResult = algebraRash.get(student.user_id);
+    const geometryResult = geometriyaRash.get(student.user_id);
 
-    if (total_ball > 90) {
-      total_ball = 90 + (total_ball - 90) * 0.03;
-    }
+    // Algebra 35 ta savolning ulushi
+    const algebra = ((algebraResult?.total_ball ?? 50) * 35) / 55;
 
-    total_ball = Math.floor(total_ball * 100) / 100;
-    if (!isFinite(total_ball) || isNaN(total_ball)) total_ball = 50;
+    // Geometry 20 ta savolning ulushi
+    const geometriya = ((geometryResult?.total_ball ?? 50) * 20) / 55;
+
+    // Umumiy ball
+    const total_ball = algebra + geometriya;
+
     return {
-      ...el,
-      total_ball,
-      skil_calculateMean,
-      skil_root,
+      ...student,
+
+      // faqat final weighted ball
+      algebra: Math.floor(algebra * 100) / 100,
+      geometriya: Math.floor(geometriya * 100) / 100,
+
+      total_ball: Math.floor(total_ball * 100) / 100,
+
       degree: getDegree(total_ball),
     };
   });
 
+  // Umumiy ball bo'yicha sort
   new_students.sort((a, b) => b.total_ball - a.total_ball);
 
-  return { new_students, students_count };
+  return {
+    new_students,
+    students_count,
+  };
 }
 
 async function saveResultsToUsers(exam, new_students, responce) {
@@ -201,40 +313,52 @@ async function saveResultsToUsers(exam, new_students, responce) {
 }
 
 async function sendCertificatesToStudents(exam, new_students) {
-  const telegramStudents = new_students.filter((s) => !s.imported);
+  const telegramStudents = new_students.filter((s) => !s.imported && s.user_id);
+
+  if (telegramStudents.length === 0) {
+    return {
+      message: "Telegram studentlar topilmadi",
+      total: 0,
+    };
+  }
+
+  // 1. PDF'larni bir marta generate qilamiz
   const pdfPaths = await generatePDF(
     exam.name,
     telegramStudents,
     exam.responce.length,
   );
-  let sent_count = 0;
-  const failed_students = [];
 
-  for (const student of telegramStudents) {
-    if (!student.user_id) continue;
+  // 2. Job yaratamiz
+  const job = createJob(exam.id, telegramStudents);
 
-    const pdfPath = pdfPaths[student.user_id];
-    if (!pdfPath) continue;
+  // 3. Background'da yuborishni boshlaymiz
+  processCertificateQueue({
+    exam,
+    students: telegramStudents,
+    pdfPaths,
+    bot,
+    getDegree,
+  }).catch((error) => {
+    console.error("Certificate queue fatal error:", error);
 
-    try {
-      await bot.sendDocument(student.user_id, pdfPath, {
-        caption:
-          `${exam.name} natijangiz tayyor!\n` +
-          `Umumiy ball: ${student.total_ball.toFixed(2)}\n` +
-          `Daraja: ${getDegree(student.total_ball)}`,
-      });
-      sent_count++;
-    } catch (err) {
-      failed_students.push({
-        user_id: student.user_id,
-        name: student.name,
-        error: err.message,
-      });
-      console.error("Error sending to user", student.user_id, err.message);
+    const currentJob = getJob(exam.id);
+
+    if (currentJob) {
+      currentJob.status = "failed";
+      currentJob.finished_at = new Date().toISOString();
+      currentJob.error = error.message;
     }
-  }
+  });
 
-  return { sent_count, failed_students };
+  // Muhim:
+  // Bu yerda await qilmaymiz!
+  return {
+    message: "Sertifikat yuborish boshlandi",
+    examId: exam.id,
+    total: telegramStudents.length,
+    job_status: job.status,
+  };
 }
 
 // GET /rash/:examId — faqat bazadan olib beradi
@@ -449,14 +573,40 @@ export const sendSertificateAndMessage = async (req, res) => {
   try {
     const { examId } = req.params;
 
-    const exam = await prisma.test.findFirst({ where: { id: Number(examId) } });
+    const exam = await prisma.test.findFirst({
+      where: {
+        id: Number(examId),
+      },
+    });
 
     if (!exam || !exam.rash?.new_students) {
-      return res.status(404).json({ message: "Exam topilmadi" });
+      return res.status(404).json({
+        message: "Exam topilmadi",
+      });
     }
-    delivery = await sendCertificatesToStudents(exam, exam.rash.new_students);
-    res.status(200).json("jaqsi");
+
+    const existingJob = getJob(exam.id);
+
+    // Agar allaqachon yuborilayotgan bo'lsa
+    if (existingJob?.status === "processing") {
+      return res.status(409).json({
+        message: "Sertifikatlar hozir yuborilmoqda",
+        job: existingJob,
+      });
+    }
+
+    const result = await sendCertificatesToStudents(
+      exam,
+      exam.rash.new_students,
+    );
+
+    return res.status(200).json(result);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    console.error("sendSertificateAndMessage error:", error);
+
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
   }
 };

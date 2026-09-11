@@ -11,6 +11,6 @@ const router = Router();
 router.post("/stop/:examId", stopRashmodule);
 router.patch("/:examId/key", updateExamKey);
 router.get("/:examId", getRashmodule);
-router.get("/sendmessage/:examId", sendSertificateAndMessage);
+router.post("/sendmessage/:examId", sendSertificateAndMessage);
 
 export default router;
