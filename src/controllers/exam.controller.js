@@ -12,10 +12,9 @@ export const upload = multer({ storage: multer.memoryStorage() });
 
 export const getExams = async (req, res) => {
   try {
-    const { sort_by } = req.query;
-    const header = req.headers.token;
+    const { sort_by, user_id } = req.query;
 
-    if (!header) {
+    if (!user_id) {
       if (!sort_by) {
         const exams = await prisma.test.findMany({
           orderBy: {
@@ -71,7 +70,6 @@ export const getExams = async (req, res) => {
       return res.status(200).json(result);
     }
 
-    const user_id = deshifr(header);
     let where = {};
 
     if (sort_by === "active") {
