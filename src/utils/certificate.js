@@ -468,6 +468,8 @@ export function generateCertificate({ student, examName, outputPath }) {
     // ==================================================
 
     const score = Number(student?.total_ball) || 0;
+    const algebra = Number(student?.algebra) || 0;
+    const geometriya = Number(student?.geometriya) || 0;
 
     const degree = getDegree(score);
 
@@ -563,10 +565,6 @@ export function generateCertificate({ student, examName, outputPath }) {
     // USER INFO
     // ==================================================
 
-    drawPersonRow(doc, "Telegram ID", telegramId, y);
-
-    y += 31;
-
     drawPersonRow(doc, "Familiya", familya, y);
 
     y += 31;
@@ -613,7 +611,88 @@ export function generateCertificate({ student, examName, outputPath }) {
 
     drawMedal(doc, W / 2, y + 67);
 
-    y += BOX_HEIGHT + 40;
+    y += BOX_HEIGHT + 18;
+
+    // ==================================================
+    // ALGEBRA + GEOMETRIYA
+    // ==================================================
+
+    const subjectY = y;
+
+    doc.fillColor(NAVY).font("Helvetica-Bold").fontSize(9);
+
+    doc.text("Algebra", 190, subjectY, {
+      width: 70,
+      align: "right",
+    });
+
+    doc.fillColor(DARK).font("Helvetica").fontSize(9);
+
+    doc.text(String(algebra), 270, subjectY, {
+      width: 35,
+      align: "left",
+    });
+
+    doc.fillColor(NAVY).font("Helvetica-Bold").fontSize(9);
+
+    doc.text("Geometriya", 315, subjectY, {
+      width: 75,
+      align: "right",
+    });
+
+    doc.fillColor(DARK).font("Helvetica").fontSize(9);
+
+    doc.text(String(geometriya), 400, subjectY, {
+      width: 35,
+      align: "left",
+    });
+
+    y += 28;
+
+    // ==================================================
+    // DIVIDER
+    // ==================================================
+
+    drawCenteredLine(doc, y, 390);
+
+    y += 33;
+
+    // ==================================================
+    // SUBJECT SCORES
+    // ==================================================
+
+    const subjectStartX = 210;
+    const subjectWidth = 180;
+
+    doc.fillColor(NAVY).font("Helvetica-Bold").fontSize(9);
+
+    doc.text("Algebra", subjectStartX, y, {
+      width: 75,
+      align: "left",
+    });
+
+    doc.fillColor(DARK).font("Helvetica").fontSize(9);
+
+    doc.text(String(algebra), subjectStartX + 85, y, {
+      width: 45,
+      align: "left",
+    });
+
+    doc.fillColor(NAVY).font("Helvetica-Bold").fontSize(9);
+
+    doc.text("Geometriya", subjectStartX + 115, y, {
+      width: 75,
+      align: "left",
+    });
+
+    doc.fillColor(DARK).font("Helvetica").fontSize(9);
+
+    doc.text(String(geometriya), subjectStartX + 205, y, {
+      width: 45,
+      align: "left",
+    });
+
+    y += 27;
 
     // ==================================================
     // DIVIDER
