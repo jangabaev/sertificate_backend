@@ -12,81 +12,24 @@ export const upload = multer({ storage: multer.memoryStorage() });
 
 export const getExams = async (req, res) => {
   try {
-    const { sort_by, user_id } = req.query;
-    console.log("userId==", user_id);
+    const { sort_by, user_id, admin_id } = req.query;
 
-    if (!user_id) {
-      if (!sort_by) {
-        const exams = await prisma.test.findMany({
-          orderBy: {
-            id: "desc",
-          },
-        });
+    const where = {};
 
-        return res.status(200).json(exams);
-      }
-
-      let where = {};
-
-      if (sort_by === "active") {
-        where = {
-          status: {
-            in: ["ACTIVE", "PENDING"],
-          },
-        };
-      }
-
-      if (sort_by === "noactive") {
-        where = {
-          status: "INACTIVE",
-        };
-      }
-
-      const exams = await prisma.test.findMany({
-        where,
-        select: {
-          id: true,
-          name: true,
-          status: true,
-          createdAt: true,
-          type: true,
-          price: true,
-          channelId: true,
-          students: true,
-        },
-        orderBy: {
-          id: "desc",
-        },
-      });
-      const result = exams.map((exam) => {
-        const { students, ...rest } = exam;
-
-        return {
-          ...rest,
-          studentCount: Array.isArray(students) ? students.length : 0,
-          isMemberSubmid: false,
-        };
-      });
-
-      return res.status(200).json(result);
+    // Admin o'zi yaratgan testlarni olish
+    if (admin_id) {
+      where.createdByUserId = String(admin_id);
     }
 
-    console.log("Ishi Isledi getExamnin==", user_id);
-
-    let where = {};
-
+    // Status bo'yicha filter
     if (sort_by === "active") {
-      where = {
-        status: {
-          in: ["ACTIVE", "PENDING"],
-        },
+      where.status = {
+        in: ["ACTIVE", "PENDING"],
       };
     }
 
     if (sort_by === "noactive") {
-      where = {
-        status: "INACTIVE",
-      };
+      where.status = "INACTIVE";
     }
 
     const exams = await prisma.test.findMany({
@@ -100,6 +43,7 @@ export const getExams = async (req, res) => {
         price: true,
         channelId: true,
         students: true,
+        createdByUserId: true,
       },
       orderBy: {
         id: "desc",
