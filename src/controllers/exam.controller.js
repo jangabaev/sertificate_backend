@@ -70,6 +70,7 @@ export const getExams = async (req, res) => {
       return res.status(200).json(result);
     }
 
+    console.log(user_id);
     let where = {};
 
     if (sort_by === "active") {
