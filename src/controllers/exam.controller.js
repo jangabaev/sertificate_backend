@@ -270,7 +270,7 @@ export const buyTest = async (req, res) => {
 export const studentResponce = async (req, res) => {
   try {
     const { id } = req.params;
-    const { user_id, responce } = req.body;
+    const { user_id, responce, user_full_name } = req.body;
 
     const exam = await prisma.test.findFirst({
       where: { id: Number(id) },
@@ -315,7 +315,9 @@ export const studentResponce = async (req, res) => {
 
     const newStudent = {
       id: user.user_id,
-      name: (user.first_name ?? "") + " " + (user.last_name ?? ""),
+      name:
+        user_full_name ??
+        (user.first_name ?? "") + " " + (user.last_name ?? ""),
       nickname: user.username,
       responce,
     };
