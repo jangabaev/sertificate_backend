@@ -313,11 +313,16 @@ export const studentResponce = async (req, res) => {
         .json({ message: "Bu o'quvchi allaqachon javob yuborgan" });
     }
 
+    const fullName = [user.first_name, user.last_name]
+      .filter(Boolean)
+      .join(" ");
+
+    const name =
+      user_full_name?.trim() || fullName || user.username || "Noma'lum";
+
     const newStudent = {
       id: user.user_id,
-      name: user_full_name
-        ? user_full_name
-        : (user.first_name ?? "") + " " + (user.last_name ?? ""),
+      name,
       nickname: user.username,
       responce,
     };
