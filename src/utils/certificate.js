@@ -658,43 +658,6 @@ export function generateCertificate({ student, examName, outputPath }) {
     y += 33;
 
     // ==================================================
-    // SUBJECT SCORES
-    // ==================================================
-
-    const subjectStartX = 210;
-    const subjectWidth = 180;
-
-    doc.fillColor(NAVY).font("Helvetica-Bold").fontSize(9);
-
-    doc.text("Algebra", subjectStartX, y, {
-      width: 75,
-      align: "left",
-    });
-
-    doc.fillColor(DARK).font("Helvetica").fontSize(9);
-
-    doc.text(String(algebra), subjectStartX + 85, y, {
-      width: 45,
-      align: "left",
-    });
-
-    doc.fillColor(NAVY).font("Helvetica-Bold").fontSize(9);
-
-    doc.text("Geometriya", subjectStartX + 115, y, {
-      width: 75,
-      align: "left",
-    });
-
-    doc.fillColor(DARK).font("Helvetica").fontSize(9);
-
-    doc.text(String(geometriya), subjectStartX + 205, y, {
-      width: 45,
-      align: "left",
-    });
-
-    y += 27;
-
-    // ==================================================
     // DIVIDER
     // ==================================================
 
