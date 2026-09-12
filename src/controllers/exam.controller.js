@@ -315,9 +315,9 @@ export const studentResponce = async (req, res) => {
 
     const newStudent = {
       id: user.user_id,
-      name:
-        user_full_name ??
-        (user.first_name ?? "") + " " + (user.last_name ?? ""),
+      name: user_full_name
+        ? user_full_name
+        : (user.first_name ?? "") + " " + (user.last_name ?? ""),
       nickname: user.username,
       responce,
     };
