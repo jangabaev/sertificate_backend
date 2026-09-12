@@ -13,6 +13,7 @@ export const upload = multer({ storage: multer.memoryStorage() });
 export const getExams = async (req, res) => {
   try {
     const { sort_by, user_id } = req.query;
+    console.log("userId==", user_id);
 
     if (!user_id) {
       if (!sort_by) {
@@ -70,7 +71,8 @@ export const getExams = async (req, res) => {
       return res.status(200).json(result);
     }
 
-    console.log(user_id);
+    console.log("Ishi Isledi getExamnin==", user_id);
+
     let where = {};
 
     if (sort_by === "active") {
