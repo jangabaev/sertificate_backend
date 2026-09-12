@@ -221,8 +221,9 @@ function calculateRash(responce, trueAnswer) {
   // ============================================================
 
   const algebraRash = calculateSectionRash(students, ALGEBRA_INDEXES);
-
+  console.log(algebraRash);
   const geometriyaRash = calculateSectionRash(students, GEOMETRY_INDEXES);
+  console.log(geometriyaRash);
 
   // ============================================================
   // 3. Natijalarni studentlarga biriktiramiz
