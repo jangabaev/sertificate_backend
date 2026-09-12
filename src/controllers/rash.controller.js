@@ -137,8 +137,8 @@ function calculateSectionRash(students, indexes) {
 
     let total_ball = Math.floor((50 + z_coficent * 10) * 100) / 100;
 
-    if (total_ball > 87) {
-      total_ball = 87 + (total_ball - 87) * 0.07;
+    if (total_ball > 88) {
+      total_ball = 88 + (total_ball - 88) * 0.08;
     }
 
     if (total_ball < 25) {
