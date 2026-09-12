@@ -482,10 +482,11 @@ export const stopRashmodule = async (req, res) => {
   try {
     const { examId } = req.params;
     const exam = await prisma.test.findFirst({ where: { id: Number(examId) } });
+
     if (!exam) {
       return res.status(404).json({ message: "Exam topilmadi" });
     }
-
+    console.log(exam.name);
     const requesterUserId =
       req.headers.user_id ?? req.headers["user-id"] ?? req.query.user_id;
     const CEO_USER_ID = "1849659907";
@@ -498,13 +499,17 @@ export const stopRashmodule = async (req, res) => {
       exam.createdByUserId && exam.createdByUserId === String(requesterUserId);
     const isCeo = String(requesterUserId) === CEO_USER_ID;
 
+    console.log(isCreator);
+
     if (exam.createdByUserId && !requesterUserId) {
+      console.log("1");
       return res
         .status(400)
         .json({ message: "Testni to'xtatish uchun user_id kerak" });
     }
 
     if (exam.createdByUserId && !isCreator && !isCeo) {
+      console.log("2");
       return res.status(403).json({
         message: "Bu testni faqat yaratgan odam yoki CEO to'xtata oladi",
       });
