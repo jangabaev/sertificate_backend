@@ -160,9 +160,12 @@ function calculateSectionRash(students, indexes) {
 }
 
 function calculateRash(responce, trueAnswer) {
+  console.log(1);
   const validResponce = responce.filter((el) => {
     return Array.isArray(el.responce) && el.responce.length > 0;
   });
+
+  console.log(2);
 
   if (validResponce.length === 0) {
     return {
@@ -170,6 +173,8 @@ function calculateRash(responce, trueAnswer) {
       students_count: 0,
     };
   }
+
+  console.log(3);
 
   const students_count = validResponce.length;
 
@@ -215,6 +220,8 @@ function calculateRash(responce, trueAnswer) {
       imported: el.imported ?? false,
     };
   });
+
+  console.log(4);
 
   // ============================================================
   // 2. GEOMETRY va ALGEBRA uchun alohida Rash
