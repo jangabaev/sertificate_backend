@@ -531,6 +531,7 @@ export const stopRashmodule = async (req, res) => {
 
     const responce = Array.isArray(exam.students) ? exam.students : [];
 
+    console.log("responce");
     if (responce.length === 0) {
       return res.status(400).json({ message: "Studentlar yo'q" });
     }

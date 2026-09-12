@@ -587,8 +587,9 @@ export const importExamExcel = async (req, res) => {
     const sheet = workbook.worksheets[0];
 
     const headerRow = sheet.getRow(1).values.slice(1);
-    // Faqat raqamli ustunlarni sanash (1, 2, 3 ...) — "Jami", "Ball", "Daraja" va boshqalarni e'tiborsiz qoldirish
+
     const questionCount = headerRow.filter((h) => Number(h) >= 1).length;
+    const fileName = req.file.originalname;
 
     const students = [];
     sheet.eachRow((row, rowNumber) => {
@@ -612,7 +613,7 @@ export const importExamExcel = async (req, res) => {
 
     const currentStudents = Array.isArray(exam.students) ? exam.students : [];
     const newEntries = students.map((s, i) => ({
-      id: `import_${Date.now()}_${i}`,
+      id: `import_${fileName}_${Date.now()}_${i}`,
       name: s.name,
       nickname: s.name,
       responce: s.responce,
