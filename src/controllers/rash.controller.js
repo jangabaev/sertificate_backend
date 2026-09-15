@@ -628,3 +628,25 @@ export const sendSertificateAndMessage = async (req, res) => {
     });
   }
 };
+
+export const getCertificateStatus = async (req, res) => {
+  try {
+    const { examId } = req.params;
+
+    const job = getJob(Number(examId));
+
+    if (!job) {
+      return res.status(404).json({
+        message: "Certificate job topilmadi",
+      });
+    }
+
+    return res.status(200).json(job);
+  } catch (error) {
+    console.error("getCertificateStatus error:", error);
+
+    return res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
