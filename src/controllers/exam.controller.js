@@ -124,6 +124,7 @@ export const checkChannelMember = async (req, res) => {
       "-1003968513581", // ms5
       "-1003722907958",
       "-1003968513581",
+      "-1002280402248",
     ];
 
     const results = await Promise.allSettled(
