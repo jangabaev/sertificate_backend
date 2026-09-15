@@ -17,7 +17,11 @@ export async function generatePDF(examName, students, totalQuestions) {
 
     await Promise.all(
       batch.map(async (student) => {
-        const safeName = (student.name || "student").replace(/\s+/g, "_");
+        const safeName = (student.name || "student")
+          .normalize("NFKD")
+          .replace(/[^\w\s-]/g, "")
+          .replace(/\s+/g, "_")
+          .trim();
 
         const safeId = String(student.user_id || "unknown").replace(
           /[^a-zA-Z0-9_-]/g,
