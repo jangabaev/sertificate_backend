@@ -241,10 +241,10 @@ function calculateRash(responce, trueAnswer) {
     const geometryResult = geometriyaRash.get(student.user_id);
 
     // Algebra 35 ta savolning ulushi
-    const algebra = ((algebraResult?.total_ball ?? 50) * 35) / 55;
+    const algebra = ((algebraResult?.total_ball ?? 50) * 40) / 55;
 
     // Geometry 20 ta savolning ulushi
-    const geometriya = ((geometryResult?.total_ball ?? 50) * 20) / 55;
+    const geometriya = ((geometryResult?.total_ball ?? 50) * 15) / 55;
 
     // Umumiy ball
     const total_ball = algebra + geometriya;
@@ -254,6 +254,7 @@ function calculateRash(responce, trueAnswer) {
 
       // faqat final weighted ball
       algebra: Math.floor(algebra * 100) / 100,
+
       geometriya: Math.floor(geometriya * 100) / 100,
 
       total_ball: Math.floor(total_ball * 100) / 100,
