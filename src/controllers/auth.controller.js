@@ -2,7 +2,7 @@ import { Prisma } from "@prisma/client";
 import prisma from "../lib/prisma.js";
 import { deshifr } from "../utils/dechifr.js";
 
-export const createUser = async (req, res) => { 
+export const createUser = async (req, res) => {
   try {
     const { user_id, username, first_name, last_name } = req.body;
 
@@ -50,20 +50,103 @@ export const getUsers = async (req, res) => {
 export const getUserbyId = async (req, res) => {
   try {
     const header = req.headers.token;
+
     if (!header) {
-      return res.status(400).json({ message: "No token provided" });
+      return res.status(400).json({
+        message: "No token provided",
+      });
     }
-    const responce = await prisma.user.findFirst({
+
+    const user = await prisma.user.findFirst({
       where: {
         user_id: String(header),
       },
     });
-    res.json(responce);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    const tests = Array.isArray(user.tests) ? user.tests : [];
+
+    // Test umuman bo'lmasa
+    if (tests.length === 0) {
+      return res.json({
+        ...user,
+        statistics: {
+          overall_average: 0,
+          questions: [],
+        },
+      });
+    }
+
+    const scores = tests
+      .map((test) => Number(test?.score))
+      .filter((score) => Number.isFinite(score));
+
+    const overallAverage =
+      scores.length > 0
+        ? Number(
+            (
+              scores.reduce((sum, score) => sum + score, 0) / scores.length
+            ).toFixed(2),
+          )
+        : 0;
+
+    const questionStats = [];
+
+    for (let i = 0; i < 55; i++) {
+      let answeredTests = 0;
+      let correctAnswers = 0;
+
+      for (const test of tests) {
+        const stdResponce = Array.isArray(test?.stdResponce)
+          ? test.stdResponce
+          : [];
+
+        if (i >= stdResponce.length) {
+          continue;
+        }
+
+        const answer = stdResponce[i];
+
+        if (answer === 0 || answer === 1) {
+          answeredTests++;
+
+          if (answer === 1) {
+            correctAnswers++;
+          }
+        }
+      }
+
+      const correctPercent =
+        answeredTests > 0
+          ? Number(((correctAnswers / answeredTests) * 100).toFixed(2))
+          : 0;
+
+      questionStats.push({
+        question: i + 1,
+        correct_percent: correctPercent,
+        correct: correctAnswers,
+        total: answeredTests,
+      });
+    }
+
+    res.json({
+      ...user,
+
+      statistics: {
+        overall_average: overallAverage,
+        questions: questionStats,
+      },
+    });
   } catch (error) {
     console.log(error);
 
     res.status(500).json({
-      message: "Error getting users",
+      message: "Error getting user",
     });
   }
 };
