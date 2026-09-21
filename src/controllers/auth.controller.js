@@ -4,7 +4,7 @@ import { deshifr } from "../utils/dechifr.js";
 
 export const createUser = async (req, res) => {
   try {
-    const { user_id, username, first_name, last_name } = req.body;
+    const { user_id, username, first_name, last_name, role } = req.body;
 
     const strUserId = String(user_id);
 
@@ -23,6 +23,8 @@ export const createUser = async (req, res) => {
         first_name: first_name || null,
         last_name: last_name || null,
         balance: 0,
+        role: role ?? "MEMBER",
+        info: {},
       },
     });
 

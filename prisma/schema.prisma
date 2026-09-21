@@ -2,6 +2,12 @@ generator client {
   provider = "prisma-client-js"
 }
 
+enum UserRole {
+  CEO
+  MEMBER
+  TEACHER
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -15,6 +21,9 @@ model User {
   last_name  String?
   tests      Json     @default("[]")
   balance    Int      @default(0)
+  role       UserRole @default(MEMBER)
+  info       Json     @default("{}")
+
 }
 
 enum Status {
