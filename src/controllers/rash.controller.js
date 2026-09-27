@@ -137,7 +137,7 @@ function calculateSectionRash(students, indexes) {
 
     let total_ball = Math.floor((50 + z_coficent * 10) * 100) / 100;
 
-    if (total_ball > 88) {
+    if (total_ball > 89) {
       total_ball = 88 + (total_ball - 88) * 0.08;
     }
 
@@ -244,7 +244,7 @@ function calculateRash(responce, trueAnswer) {
     const algebra = ((algebraResult?.total_ball ?? 50) * 40) / 55;
 
     // Geometry 20 ta savolning ulushi
-    const geometriya = ((geometryResult?.total_ball ?? 50) * 15) / 55;
+    const geometriya = ((geometryResult?.total_ball ?? 50) * 20) / 55;
 
     // Umumiy ball
     const total_ball = algebra + geometriya;
