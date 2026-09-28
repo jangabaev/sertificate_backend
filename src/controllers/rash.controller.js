@@ -241,10 +241,10 @@ function calculateRash(responce, trueAnswer) {
     const geometryResult = geometriyaRash.get(student.user_id);
 
     // Algebra 35 ta savolning ulushi
-    const algebra = ((algebraResult?.total_ball ?? 50) * 40) / 55;
+    const algebra = ((algebraResult?.total_ball ?? 50) * 67) / 100;
 
     // Geometry 20 ta savolning ulushi
-    const geometriya = ((geometryResult?.total_ball ?? 50) * 20) / 55;
+    const geometriya = ((geometryResult?.total_ball ?? 50) * 33) / 100;
 
     // Umumiy ball
     const total_ball = algebra + geometriya;
