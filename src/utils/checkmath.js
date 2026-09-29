@@ -1,7 +1,7 @@
 import { evaluate } from "mathjs";
 
 /**
- * 1. LaTeX'ni tozalash
+ * LaTeX'ni basic normalize qilish
  */
 function normalizeLatex(value) {
   if (value === null || value === undefined) return "";
@@ -19,18 +19,13 @@ function normalizeLatex(value) {
 }
 
 /**
- * Ichma-ich {} bloklarni topish uchun
- *
- * Masalan:
- * \frac{\sqrt{5}}{2}
+ * Ichma-ich {} yopilishini topish
  */
 function findClosingBrace(str, openIndex) {
   let depth = 0;
 
   for (let i = openIndex; i < str.length; i++) {
-    if (str[i] === "{") {
-      depth++;
-    }
+    if (str[i] === "{") depth++;
 
     if (str[i] === "}") {
       depth--;
@@ -45,9 +40,7 @@ function findClosingBrace(str, openIndex) {
 }
 
 /**
- * \frac{a}{b} => ((a)/(b))
- *
- * Nested fractionlarni ham ishlaydi.
+ * \frac{a}{b} -> ((a)/(b))
  */
 function convertFractions(input) {
   let result = input;
@@ -92,16 +85,18 @@ function convertFractions(input) {
 }
 
 /**
- * \sqrt{...} => sqrt(...)
- * \sqrt5 => sqrt(5)
+ * \sqrt{...} -> sqrt(...)
+ * \sqrt5 -> sqrt(5)
  */
 function convertSquareRoots(input) {
   let result = input;
 
+  // \sqrt{...}
   while (result.includes("\\sqrt{")) {
     const sqrtIndex = result.lastIndexOf("\\sqrt{");
 
     const openIndex = result.indexOf("{", sqrtIndex);
+
     const closeIndex = findClosingBrace(result, openIndex);
 
     if (closeIndex === -1) {
@@ -116,20 +111,19 @@ function convertSquareRoots(input) {
       result.slice(closeIndex + 1);
   }
 
-  // \sqrt20 => sqrt(20)
+  // \sqrt20 -> sqrt(20)
   result = result.replace(/\\sqrt(-?\d+(?:\.\d+)?)/g, "sqrt($1)");
 
   return result;
 }
 
 /**
- * {2} yoki {pi} kabi qolgan oddiy braces
+ * Oddiy braces
  *
- * {2} => (2)
+ * {2} -> (2)
  */
 function convertBraces(input) {
   let result = input;
-
   let previous;
 
   do {
@@ -142,12 +136,12 @@ function convertBraces(input) {
 }
 
 /**
- * LaTeX -> mathjs expression
+ * LaTeX -> mathjs
  */
 function latexToMathExpression(value) {
   let result = normalizeLatex(value);
 
-  // Operators
+  // operators
   result = result
     .replace(/\\cdot/g, "*")
     .replace(/\\times/g, "*")
@@ -155,44 +149,47 @@ function latexToMathExpression(value) {
     .replace(/\\div/g, "/")
     .replace(/÷/g, "/");
 
-  // Constants
+  // constants
   result = result.replace(/\\pi/g, "pi").replace(/π/g, "pi");
 
-  // Fractions
+  // fractions
   result = convertFractions(result);
 
-  // Square roots
+  // square roots
   result = convertSquareRoots(result);
 
-  // Powers
-  // 2^{3} => 2^(3)
+  // powers
   result = result.replace(/\^\{([^{}]+)\}/g, "^($1)");
 
-  // qolgan {}
+  // braces
   result = convertBraces(result);
 
   /**
-   * Yashirin ko'paytirish
+   * ========================================
+   * IMPLICIT MULTIPLICATION
+   * ========================================
    */
 
-  // 2pi => 2*pi
-  result = result.replace(/(\d|\))(?=pi)/g, "$1*");
+  // 2pi -> 2*pi
+  result = result.replace(/(\d|\))(?=pi\b)/g, "$1*");
 
-  // 2sqrt(5) => 2*sqrt(5)
-  // )sqrt(5) => )*sqrt(5)
+  // 2sqrt(5) -> 2*sqrt(5)
   result = result.replace(/(\d|\))(?=sqrt\()/g, "$1*");
 
-  // 2(3+4) => 2*(3+4)
-  result = result.replace(/(\d|pi|\))(?=\()/g, "$1*");
+  // pi(3+4) -> pi*(3+4)
+  result = result.replace(/(pi)(?=\()/g, "$1*");
 
-  // )( => )*(
+  // 144(1+sqrt(3)) -> 144*(1+sqrt(3))
+  result = result.replace(/(\d|\))(?=\()/g, "$1*");
+
+  // )( -> )*(
   result = result.replace(/\)\(/g, ")*(");
 
   return result;
 }
 
 /**
- * Expression'ni numeric qiymatga aylantirish
+ * Numeric value
  */
 function getMathValue(value) {
   const expression = latexToMathExpression(value);
@@ -207,7 +204,7 @@ function getMathValue(value) {
 }
 
 /**
- * Ikki sonni tolerance bilan solishtirish
+ * Floating point comparison
  */
 function nearlyEqual(a, b) {
   const absoluteTolerance = 1e-6;
@@ -221,18 +218,25 @@ function nearlyEqual(a, b) {
 }
 
 /**
- * MAIN FUNCTION
+ * MAIN
  */
 export function isCorrect(userAnswer, correctAnswer) {
   try {
-    if (userAnswer === correctAnswer) {
-      return true;
+    if (
+      userAnswer === null ||
+      userAnswer === undefined ||
+      correctAnswer === null ||
+      correctAnswer === undefined
+    ) {
+      return false;
     }
+
     const userExpression = latexToMathExpression(userAnswer);
 
     const correctExpression = latexToMathExpression(correctAnswer);
 
     const userValue = evaluate(userExpression);
+
     const correctValue = evaluate(correctExpression);
 
     if (
@@ -255,6 +259,8 @@ export function isCorrect(userAnswer, correctAnswer) {
 
       userValue,
       correctValue,
+
+      difference: Math.abs(userValue - correctValue),
 
       correct,
     });
