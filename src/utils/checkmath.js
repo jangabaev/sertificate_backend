@@ -42,43 +42,47 @@ function findClosingBrace(str, openIndex) {
 /**
  * \frac{a}{b} -> ((a)/(b))
  */
+function readLatexArg(str, index) {
+  if (index >= str.length) {
+    throw new Error("Missing argument");
+  }
+
+  if (str[index] === "{") {
+    const close = findClosingBrace(str, index);
+
+    if (close === -1) {
+      throw new Error("Invalid argument braces");
+    }
+
+    return {
+      content: str.slice(index + 1, close),
+      end: close + 1,
+    };
+  }
+
+  return {
+    content: str[index],
+    end: index + 1,
+  };
+}
+
+/**
+ * \frac{a}{b}, \frac32, \frac3{2}, \frac{3}2 -> ((a)/(b))
+ */
 function convertFractions(input) {
   let result = input;
 
   while (result.includes("\\frac")) {
     const fracIndex = result.lastIndexOf("\\frac");
+    const argsStart = fracIndex + "\\frac".length;
 
-    const firstOpen = result.indexOf("{", fracIndex);
+    const numerator = readLatexArg(result, argsStart);
+    const denominator = readLatexArg(result, numerator.end);
 
-    if (firstOpen === -1) {
-      throw new Error("Invalid \\frac syntax");
-    }
-
-    const firstClose = findClosingBrace(result, firstOpen);
-
-    if (firstClose === -1) {
-      throw new Error("Invalid numerator");
-    }
-
-    const secondOpen = result.indexOf("{", firstClose);
-
-    if (secondOpen === -1) {
-      throw new Error("Invalid denominator");
-    }
-
-    const secondClose = findClosingBrace(result, secondOpen);
-
-    if (secondClose === -1) {
-      throw new Error("Invalid denominator");
-    }
-
-    const numerator = result.slice(firstOpen + 1, firstClose);
-    const denominator = result.slice(secondOpen + 1, secondClose);
-
-    const converted = `((${numerator})/(${denominator}))`;
+    const converted = `((${numerator.content})/(${denominator.content}))`;
 
     result =
-      result.slice(0, fracIndex) + converted + result.slice(secondClose + 1);
+      result.slice(0, fracIndex) + converted + result.slice(denominator.end);
   }
 
   return result;
@@ -229,6 +233,10 @@ export function isCorrect(userAnswer, correctAnswer) {
       correctAnswer === undefined
     ) {
       return false;
+    }
+
+    if (userAnswer == correctAnswer) {
+      return true;
     }
 
     const userExpression = latexToMathExpression(userAnswer);
